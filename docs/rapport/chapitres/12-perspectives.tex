@@ -1,0 +1,16 @@
+\chapter{Perspectives}\label{chap:perspectives}
+
+\begin{itemize}
+  \item \textbf{La commande.} Transformer un panier en commande (adresse, paiement, historique) reste volontairement
+        hors périmètre, comme à l'atelier~2. Les services sont prêts à l'accueillir : un \code{CommandeService} et un
+        \code{CommandeBean} s'ajouteraient sans modifier l'existant.
+  \item \textbf{Ajax.} Un panier qui se met à jour sans rechargement est naturel avec \code{f:ajax}. Il suppose de
+        choisir entre assouplir la CSP et fournir le code JavaScript depuis le serveur : c'est une décision de sécurité
+        avant d'être une décision de confort.
+  \item \textbf{Bibliothèque de composants.} PrimeFaces ou un équivalent apporterait tables paginées et boîtes de
+        dialogue. J'ai choisi JSF pur pour comprendre ce que ces bibliothèques cachent ; cela devient légitime une fois acquis.
+  \item \textbf{Jakarta EE.} Le passage à Tomcat~10 ou à un serveur d'applications impose l'espace de noms \code{jakarta.*}
+        et JSF~3 ou plus. La séparation en couches limite le changement aux imports et aux descripteurs.
+  \item \textbf{Limiteur de tentatives.} Le \code{LoginGuard} est en mémoire : il ne survit pas à un redémarrage et ne se
+        partage pas entre serveurs. Un déploiement en grappe demanderait un stockage commun.
+\end{itemize}

@@ -1,0 +1,92 @@
+\chapter{Tests}\label{chap:tests}
+
+\section{Stratégie}
+Trois niveaux de vérification se complètent. Les contrôles automatisés couvrent le métier, les utilitaires, la
+persistance, les parties pures de la couche web et la structure statique des pages ; ils s'exécutent par une seule
+commande et affichent un total. Le parcours manuel vérifie ce qu'aucun test sans serveur ne peut voir (rendu,
+cycle de vie JSF, redirections). Les captures de ce rapport en sont la trace.
+
+\section{Contrôles automatisés}
+La classe \code{Verifications} enchaîne six lots, sans bibliothèque de test : une petite classe \code{Checks} compte les
+réussites et les échecs. Le résultat attendu est \nbChecks{} réussites et aucun échec.
+
+\begin{table}[htbp]
+\centering
+\caption{Lots de contrôles}\label{tab:lots}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Lot} & \textbf{Ce qu'il vérifie}\\
+\midrule
+\code{PanierCheck} & Règles R1 à R6 du panier : bornes de quantité, stock, fusion de lignes, total en \code{BigDecimal}.\\
+\code{ServiceChecks} & Services métier : validation des formulaires, messages d'erreur.\\
+\code{UtilChecks} & Hachage PBKDF2, argent, limiteur de tentatives.\\
+\code{JpaChecks} & Persistance réelle sur MySQL : contraintes refusées, verrouillage, héritage (nécessite la base).\\
+\code{WebChecks} & Parties pures de la couche web : redirections sûres, jeton CSRF, politique CSP, adresses de la vitrine, aides d'affichage, page d'erreur.\\
+\code{VuesChecks} & Analyse statique des pages Facelets (section~\ref{sec:vues-checks}).\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Tests de la couche web}\label{sec:webchecks}
+\code{WebChecks} montre l'intérêt de sortir la logique des pages et des beans dans des méthodes pures. Quelques exemples :
+
+\begin{itemize}
+  \item \code{Chemins.cheminSur} refuse \code{//site-externe}, les URL absolues, l'antislash et un saut de ligne
+        (injection d'en-tête) ; le chemin interne est accepté.
+  \item \code{VitrineBean.construireUrl} encode la recherche en UTF-8 (\code{café noir} $\rightarrow$ \code{caf\%C3\%A9+noir}),
+        omet la page~1 et neutralise un \code{\&page=9} saisi dans la recherche.
+  \item \code{SecurityFilter.egal} compare les jetons sans fuite par le temps et refuse un jeton absent ou de longueur
+        différente.
+  \item \code{Affichage.prix} formate avec deux décimales, une virgule et une espace insécable avant « MAD ».
+\end{itemize}
+
+\section{Analyse statique des vues}\label{sec:vues-checks}
+Une erreur dans une page Facelets n'apparaît normalement qu'au chargement de la page. \code{VuesChecks} la détecte avant, sans serveur :
+
+\begin{enumerate}
+  \item chaque page, gabarit et composant est un document XML bien formé ;
+  \item aucun \code{h:commandLink}, aucun \code{f:ajax}, aucun attribut \code{on*} (cohérence avec la CSP) ;
+  \item chaque \code{h:form} contient \code{t:csrf} ;
+  \item chaque expression \code{bean.membre} désigne un bean existant et un accesseur ou une méthode qui existe.
+\end{enumerate}
+
+La dernière règle remplace une partie de ce qu'un EL mal écrit ferait découvrir en pleine démonstration. Elle a déjà trouvé
+un faux positif instructif : une expression EL laissée dans un commentaire XML d'un composant. Facelets évalue l'EL même dans les
+commentaires ; le commentaire a été reformulé.
+
+\section{Parcours manuel}
+Le tableau~\ref{tab:parcours} liste les quinze scénarios déroulés dans le navigateur. Chaque capture porte la barre d'adresse
+et le titre de l'onglet, afin que la page ouverte soit identifiable.
+
+\begin{table}[htbp]
+\centering
+\caption{Scénarios du parcours manuel}\label{tab:parcours}
+\small
+\begin{tabularx}{\linewidth}{@{}rXl@{}}
+\toprule
+\textbf{N°} & \textbf{Scénario et résultat attendu} & \textbf{Figure}\\
+\midrule
+1 & Ouvrir la vitrine : cartes, pastilles de catégories. & \ref{fig:vitrine}\\
+2 & Rechercher, puis filtrer : l'adresse porte \code{q} et \code{categorie}, le compteur change. & \ref{fig:recherche}\\
+3 & Ouvrir un produit : prix, stock, « Se connecter pour acheter ». & \ref{fig:detail}\\
+4 & Connexion avec un mauvais mot de passe : message rouge, champ vidé. & \ref{fig:connexion}\\
+5 & Connexion correcte : « Bienvenue », badge du panier. & ---\\
+6 & Ouvrir le panier : lignes, quantités, total. & \ref{fig:panier}\\
+7 & Dépasser le stock du produit \code{INF-003} : refus, panier inchangé ; produit à stock nul : bouton désactivé. & \ref{fig:stock}\\
+8 & Ajouter un produit déjà présent : fusion de la ligne ; \code{F5} ne rejoue pas le formulaire. & ---\\
+9 & Contrôler la base : les lignes correspondent à l'écran. & \ref{fig:controle}\\
+10 & Se déconnecter : retour à la vitrine avec message. & ---\\
+11 & Connexion administrateur : arrivée sur la liste des produits. & \ref{fig:admin}\\
+12 & Nouveau produit, formulaire vide : erreurs sous les champs. & \ref{fig:adminform}\\
+13 & Inscription avec un mot de passe trop court : erreurs, mots de passe vidés. & \ref{fig:inscription}\\
+14 & Client devant \code{admin/produits.xhtml} : page 403. & \ref{fig:403}\\
+15 & Non connecté devant \code{panier.xhtml} : redirection vers la connexion, puis retour au panier. & ---\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le scénario~8 vérifie le motif Post/Redirect/Get : après l'ajout, la page affichée est le résultat d'une redirection
+(\code{GET}), donc un rechargement n'envoie rien. Le scénario~7 se fait par ajouts répétés : un navigateur bloque
+de toute façon une saisie au-dessus du maximum d'un champ numérique, c'est pourquoi la règle est aussi vérifiée côté serveur.
+
+\fig{13-mysql-controle-paniers}{Contrôle en base : lignes du panier après les manipulations}{fig:controle}

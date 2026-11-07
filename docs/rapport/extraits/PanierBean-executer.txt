@@ -1,0 +1,13 @@
+private String executer(String cible, String messageSucces, Operation operation) {
+    try {
+        Panier resultat = operation.appliquer();
+        userSession.memoriserCompteur(resultat.getNombreArticles());
+        Messages.succes(messageSucces);
+    } catch (MetierException e) {
+        Messages.erreur(e.getMessage());
+    }
+    panier = null;
+    quantites = null;
+    Messages.apresRedirection();
+    return cible;
+}

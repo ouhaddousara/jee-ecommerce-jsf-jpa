@@ -1,0 +1,102 @@
+\chapter{Couche JSF : beans, portées et navigation}\label{chap:jsf}
+
+\section{Cycle de vie et conséquences}
+Une requête JSF traverse six phases : restauration de la vue, application des valeurs de requête, validation,
+mise à jour du modèle, invocation de l'application, rendu. Deux conséquences structurent tout le code.
+
+\begin{itemize}
+  \item Une valeur saisie n'arrive dans le bean qu'à la phase de \textit{mise à jour du modèle}, et seulement si la
+        validation a réussi. Le bean ne lit donc jamais \code{request.getParameter} : il reçoit des propriétés.
+  \item Une méthode d'action (\code{action="\#\{bean.methode\}"}) s'exécute à la phase d'\textit{invocation de
+        l'application}, après la mise à jour du modèle. Elle retourne un résultat de navigation.
+\end{itemize}
+
+\section{Choix des portées}
+La portée d'un bean décide de la durée de vie de son état. Le tableau~\ref{tab:portees} justifie chaque choix.
+
+\begin{table}[htbp]
+\centering
+\caption{Portées des beans}\label{tab:portees}
+\small
+\begin{tabularx}{\linewidth}{@{}llX@{}}
+\toprule
+\textbf{Bean} & \textbf{Portée} & \textbf{Justification}\\
+\midrule
+\code{ConnexionBean}, \code{InscriptionBean} & \code{@ViewScoped} & Garde la saisie tant que la même page est réaffichée (erreur de validation) ; disparaît à la navigation.\\
+\code{VitrineBean}, \code{DetailBean} & \code{@ViewScoped} & Les filtres arrivent par l'adresse (paramètres de vue) ; l'état n'a pas à survivre à la page.\\
+\code{PanierBean} & \code{@ViewScoped} & Le panier lui-même est lu en base à chaque affichage ; le bean ne garde que les quantités saisies.\\
+\code{ProduitAdminBean}, \code{CategorieAdminBean} & \code{@ViewScoped} & Un formulaire d'édition par page.\\
+\code{UserSession} & \code{@RequestScoped} & Façade sans état propre : l'état de l'utilisateur est dans la \code{HttpSession}, sous forme d'un objet \code{SessionUser} sérialisable.\\
+\code{LoginGuard}, \code{Affichage} & \code{@ApplicationScoped} & Partagés : le compteur de tentatives doit voir tous les visiteurs, et les aides d'affichage n'ont pas d'état.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Deux décisions méritent d'être détaillées.
+
+\textbf{Aucun bean en \code{@SessionScoped}.} Une portée session est tentante pour « se souvenir de l'utilisateur »,
+mais elle fait vivre l'état d'un bean aussi longtemps que la session. Ici, la session ne contient qu'un petit
+objet immuable (\code{SessionUser} : identifiant, nom, rôle) ; \code{UserSession} est une façade de requête qui le lit et
+le modifie. La fixation de session se traite ainsi à un seul endroit (section~\ref{sec:usersession}).
+
+\textbf{\code{@ViewScoped} de JSF, pas de CDI.} L'annotation utilisée est \code{javax.faces.view.ViewScoped}, couplée à
+\code{@Named}. Les beans de cette portée sont placés dans l'état de la vue : ils doivent être \code{Serializable}, ce qui a conduit à
+rendre sérialisables les objets formulaires (\code{ProduitForm}, \code{CategorieForm}, \code{InscriptionForm}) et à
+remplacer les \code{Map} génériques par des \code{LinkedHashMap}.
+
+\section{Navigation et motif Post/Redirect/Get}
+Une action qui modifie des données doit se terminer par une redirection, sinon un rechargement de la page
+(\code{F5}) rejoue le formulaire \cite{prg}. JSF y répond par la navigation implicite : une méthode retourne
+le nom d'une page suivi de \code{?faces-redirect=true}. Les paramètres utiles (\code{includeViewParams=true}) sont
+conservés dans l'adresse.
+
+Le message de confirmation pose un problème : il est créé pendant la requête qui poste, mais affiché dans la page
+suivante. La solution est \code{FacesMessage} conservé par le \textit{flash} de JSF. La classe utilitaire
+\code{Messages} regroupe les trois niveaux (succès, information, erreur) et la méthode \code{apresRedirection()}
+qui active la conservation.
+
+\lstinputlisting[language=Java,caption={\texttt{PanierBean} : toute action passe par une méthode unique},label={lst:executer}]{extraits/PanierBean-executer.txt}
+
+La méthode \code{executer} évite de répéter quatre fois le même bloc. Elle capture l'exception métier, la
+transforme en message rouge, vide les valeurs mises en cache (\code{panier = null}) pour que l'écran suivant relise la
+base, active la conservation du message, et retourne la cible. Le motif est le même dans tous les beans de gestion.
+
+\section{Paramètres de vue}
+La vitrine se filtre par catégorie, mot-clé et page. Ces trois valeurs sont portées par l'adresse, pas par un
+formulaire JSF : la recherche est un simple formulaire \code{GET}. Les paramètres sont déclarés dans la page avec
+\code{f:viewParam}, et \code{f:viewAction} appelle \code{init()} une fois qu'ils sont injectés.
+
+\lstinputlisting[language=XML,caption={Métadonnées de \texttt{vitrine.xhtml}},label={lst:meta}]{extraits/vitrine-metadata.txt}
+
+L'avantage est concret : une recherche se partage et se met en favori (\code{vitrine.xhtml?categorie=2\&q=cle}), le bouton
+« page précédente » du navigateur fonctionne, et la pagination se construit avec de simples liens. La construction de
+ces adresses est un calcul pur (\code{VitrineBean.construireUrl}), vérifié par des tests sans serveur : les
+paramètres sont encodés en UTF-8, la page~1 est omise et un \code{\&} saisi dans la recherche ne peut pas injecter un
+paramètre supplémentaire.
+
+\section{Session et authentification}\label{sec:usersession}
+\code{UserSession.ouvrir} est le seul endroit où une connexion réussie est enregistrée. Il enchaîne quatre opérations dans cet
+ordre précis.
+
+\lstinputlisting[language=Java,caption={Ouverture de session},label={lst:ouvrir}]{extraits/UserSession-ouvrir.txt}
+
+\begin{enumerate}
+  \item Lire l'adresse de retour mémorisée par le filtre d'authentification, avant de changer d'identifiant.
+  \item \code{changeSessionId()} : un nouvel identifiant de session est émis (défense contre la fixation de session).
+  \item Enregistrer le \code{SessionUser} dans la nouvelle session.
+  \item Renouveler le jeton anti-CSRF, lié à l'identité qui vient de s'authentifier.
+\end{enumerate}
+
+\code{ConnexionBean.connecter} appelle cette méthode après avoir interrogé le service et le \code{LoginGuard}, qui limite
+les essais à cinq par quinze minutes pour un couple adresse IP / adresse électronique. Le mot de passe saisi est vidé
+dans tous les cas d'échec, pour qu'il ne soit jamais renvoyé à la page.
+
+\lstinputlisting[language=Java,caption={\texttt{ConnexionBean.connecter}},label={lst:connecter}]{extraits/ConnexionBean-connecter.txt}
+
+\section{Aides d'affichage dans Java}
+Le bean \code{Affichage} (portée application) fournit le format des prix (deux décimales, virgule, espace insécable,
+MAD), les initiales d'un nom, les classes CSS de stock, le libellé du bouton d'ajout et les textes de la page d'erreur.
+Ces règles auraient pu s'écrire en EL dans les pages. Elles sont en Java pour une raison pratique expliquée au
+chapitre~\ref{chap:incidents} : les analyseurs statiques d'Eclipse signalent comme erreurs des expressions
+conditionnelles parfaitement valides à l'exécution. Déplacer la logique dans Java supprime ces faux positifs et la rend
+testable (section~\ref{sec:webchecks}).

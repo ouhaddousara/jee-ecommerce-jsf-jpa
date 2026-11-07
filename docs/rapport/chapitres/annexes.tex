@@ -1,0 +1,43 @@
+\chapter{Annexes}
+
+\section{Arborescence du projet}
+\begin{lstlisting}[caption={Arborescence simplifiée},label={lst:arbre}]
+jee-ecommerce-jsf-jpa/
+  pom.xml, README.md, .gitignore
+  db/create-database.sql
+  docs/diagramme-classes.md, docs/rapport/
+  src/main/java/ma/fstt/
+    entities/  exception/  util/  persistence/  service/  jpa/   (atelier 2)
+    web/       15 classes : filtres, beans, UserSession, Affichage
+  src/main/resources/
+    META-INF/persistence.xml, META-INF/beans.xml, db.properties.example
+  src/main/webapp/
+    WEB-INF/web.xml, faces-config.xml, templates/layout.xhtml
+    resources/components/  csrf, icone, visuel, vide, champ
+    *.xhtml (8 pages) et admin/*.xhtml (4 pages)
+    assets/css/app.css, assets/js/app.js
+  src/test/java/ma/fstt/  Verifications + 7 lots de contrôles
+\end{lstlisting}
+
+\section{Comptes de démonstration}
+\begin{table}[htbp]
+\centering
+\caption{Comptes créés par \texttt{SchemaTool}}\label{tab:comptes}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Profil} & \textbf{Adresse} & \textbf{Mot de passe}\\
+\midrule
+Administrateur & \code{admin@example.com} & \code{Admin\#2026}\\
+Client & \code{yasmine@example.com} & \code{Client\#2026}\\
+\bottomrule
+\end{tabular}
+\end{table}
+Un second client, \code{omar@example.com}, sert au scénario de refus d'accès. Ces comptes n'existent que dans la base
+locale de démonstration.
+
+\section{Diagrammes Mermaid}
+Le fichier \code{docs/diagramme-classes.md} contient deux diagrammes que GitHub affiche directement. Le premier est le modèle
+du domaine ; le second la couche JSF.
+
+\fig{01-diagramme-metier}{Diagramme Mermaid du modèle métier}{fig:mermaid-metier}
+\fig{02-diagramme-beans}{Diagramme Mermaid de la couche JSF}{fig:mermaid-beans}

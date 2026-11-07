@@ -1,0 +1,97 @@
+\chapter{Conception}\label{chap:conception}
+
+\section{Acteurs et besoins}
+Les trois profils de l'atelier~2 sont inchangés (tableau~\ref{tab:acteurs}).
+
+\begin{table}[htbp]
+\centering
+\caption{Acteurs et fonctionnalités}\label{tab:acteurs}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Acteur} & \textbf{Fonctionnalités}\\
+\midrule
+Visiteur & Parcourir la vitrine, filtrer par catégorie, rechercher, ouvrir la fiche d'un produit, créer un compte, se connecter.\\
+Client & Tout ce que fait le visiteur, plus : ajouter un produit au panier, modifier une quantité, retirer une ligne, vider le panier.\\
+Administrateur & Créer, modifier, retirer de la vente et supprimer des produits ; gérer les catégories.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Modèle du domaine}
+Le modèle est identique à celui de l'atelier~2 : \code{Client} et \code{Administrateur} spécialisent la classe
+abstraite \code{Internaute} ; un client possède un panier, composé de lignes qui référencent des produits ; la
+vitrine présente des catégories qui regroupent des produits. La figure~\ref{fig:classes} le représente ; la
+version Mermaid, lisible directement sur GitHub, figure en annexe (figure~\ref{fig:mermaid-metier}).
+
+\begin{landscape}
+\thispagestyle{empty}
+\centering
+\resizebox{\linewidth}{!}{\input{figures/diagramme-classes-tikz}}
+\captionof{figure}{Diagramme de classes du domaine (inchangé depuis l'atelier 2)}\label{fig:classes}
+\end{landscape}
+
+\section{Règles métier}
+Les règles restent portées par l'entité \code{Panier} et par les contraintes de la base. Aucune n'est dupliquée dans
+un bean : c'est la raison pour laquelle le remplacement de la couche web n'a demandé aucune modification du métier
+(tableau~\ref{tab:regles}).
+
+\begin{table}[htbp]
+\centering
+\caption{Règles métier et double protection}\label{tab:regles}
+\begin{tabularx}{\linewidth}{@{}lXl@{}}
+\toprule
+\textbf{N°} & \textbf{Règle} & \textbf{Garde-fou en base}\\
+\midrule
+R1 & Une quantité de ligne est comprise entre 1 et 99. & \code{CHECK quantite >= 1}\\
+R2 & Seul un produit actif peut être ajouté au panier. & ---\\
+R3 & La quantité d'une ligne ne dépasse pas le stock disponible. & \code{CHECK stock >= 0}\\
+R4 & Ajouter un produit déjà présent fusionne la ligne. & \code{UNIQUE (panier, produit)}\\
+R5 & Le prix de la ligne est figé au moment de l'ajout. & \code{CHECK prix\_unitaire >= 0}\\
+R6 & Le total est la somme des sous-totaux, en \code{BigDecimal}. & ---\\
+R7 & L'adresse électronique est unique, en minuscules. & \code{UNIQUE (email)}\\
+R8 & La référence d'un produit est unique, en majuscules. & \code{UNIQUE (reference)}\\
+R9 & Un produit présent dans un panier ne peut pas être supprimé. & clé étrangère\\
+R10 & Une catégorie qui contient des produits ne peut pas être supprimée. & clé étrangère\\
+R11 & Un internaute a obligatoirement un rôle. & \code{NOT NULL} + \code{CHECK}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Héritage}
+La stratégie \code{SINGLE\_TABLE} est conservée : l'authentification lit un internaute par son adresse sans savoir
+s'il est client ou administrateur, ce qui se résout en une requête sans jointure. Le détail de la comparaison avec
+\code{JOINED} et \code{TABLE\_PER\_CLASS} figure dans le rapport de l'atelier~2.
+
+\section{Architecture JSF}
+Dans l'atelier~2, une servlet recevait la requête, appelait un service, plaçait des attributs dans la requête puis
+transmettait à une JSP. Avec JSF, le contrôleur frontal est unique (\code{FacesServlet}) ; le rôle de chaque servlet
+est repris par un \textbf{bean CDI}, lié à une page par des expressions EL. La figure~\ref{fig:beans} montre les trois
+niveaux ; le tableau~\ref{tab:correspondance} donne la correspondance exacte avec l'atelier~2.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/diagramme-beans-tikz}}
+\caption{Pages Facelets, beans CDI et services}\label{fig:beans}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Correspondance servlets $\rightarrow$ beans}\label{tab:correspondance}
+\begin{tabularx}{\linewidth}{@{}llX@{}}
+\toprule
+\textbf{Atelier 2} & \textbf{Atelier 3} & \textbf{Pages}\\
+\midrule
+\code{ClientServlet} & \code{ConnexionBean}, \code{InscriptionBean} & \code{connexion.xhtml}, \code{inscription.xhtml}\\
+\code{VitrineServlet} & \code{VitrineBean}, \code{DetailBean} & \code{vitrine.xhtml}, \code{detail.xhtml}\\
+\code{PanierServlet} & \code{PanierBean} & \code{panier.xhtml}\\
+\code{ProduitServlet} & \code{ProduitAdminBean} & \code{admin/produits.xhtml}, \code{admin/produit-form.xhtml}\\
+\code{CategorieServlet} & \code{CategorieAdminBean} & \code{admin/categories.xhtml}, \code{admin/categorie-form.xhtml}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le sujet suggère un bean par gestion. Je l'ai suivi, avec un découpage plus fin que « un bean par entité » : un bean
+est lié à un \textit{écran} et à son vocabulaire, pas à une table. Le panier, par exemple, manipule des lignes et des
+produits mais n'a qu'un bean, parce qu'un seul écran le commande.
+
+\fig{03-structure-projet}{Structure du projet dans Eclipse : beans, pages et composants}{fig:structure}

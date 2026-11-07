@@ -1,0 +1,125 @@
+\begin{tikzpicture}[
+  % UML class box: title part (tinted) + attribute/method part
+  cls/.style={
+    rectangle split, rectangle split parts=2,
+    draw=black!70, thick, fill=white,
+    rectangle split part fill={teal!15, white},
+    font=\footnotesize, text width=5.3cm, align=left,
+    inner xsep=6pt, inner ysep=4pt},
+  abs/.style={cls, draw=teal!60!black},
+  mult/.style={font=\scriptsize, fill=white, inner sep=1pt},
+  rel/.style={font=\scriptsize\itshape, fill=white, inner sep=1.5pt}
+]
+
+% --- Internaute hierarchy ---
+\node[abs] (int) at (-2.9,0) {
+  \textbf{\textit{Internaute}} \\ {\scriptsize\textit{<<abstract>>}}
+  \nodepart{second}
+  - id : Long\\
+  - nom, prenom : String\\
+  - email : String (unique)\\
+  - motDePasseHash : String\\
+  - dateInscription : LocalDateTime};
+
+\node[cls] (adm) at (-6.0,-5.4) {
+  \textbf{Administrateur}
+  \nodepart{second}
+  - matricule : String};
+
+\node[cls] (cli) at (0.2,-5.4) {
+  \textbf{Client}
+  \nodepart{second}
+  - adresse : String\\
+  - telephone : String};
+
+% --- Cart ---
+\node[cls] (pan) at (8.8,-5.4) {
+  \textbf{Panier}
+  \nodepart{second}
+  - id : Long\\
+  - dateCreation : LocalDateTime\\
+  - dateModification : LocalDateTime\\
+  + ajouterProduit(Produit, int)\\
+  + modifierQuantite(Produit, int)\\
+  + retirerProduit(Produit)\\
+  + vider()\\
+  + getTotal() : BigDecimal};
+
+\node[cls] (lig) at (17.4,-5.4) {
+  \textbf{LignePanier}
+  \nodepart{second}
+  - id : Long\\
+  - quantite : int\\
+  - prixUnitaire : BigDecimal\\
+  + getSousTotal() : BigDecimal};
+
+% --- Catalogue ---
+\node[cls] (pro) at (17.4,-11.6) {
+  \textbf{Produit}
+  \nodepart{second}
+  - id : Long\\
+  - reference : String (unique)\\
+  - nom, description : String\\
+  - prix : BigDecimal\\
+  - stock : int\\
+  - imageUrl : String\\
+  - actif : boolean\\
+  - version : long (@Version)};
+
+\node[cls] (cat) at (8.8,-11.6) {
+  \textbf{Categorie}
+  \nodepart{second}
+  - id : Long\\
+  - nom : String\\
+  - description : String};
+
+\node[cls] (vit) at (0.2,-11.6) {
+  \textbf{Vitrine}
+  \nodepart{second}
+  - id : Long\\
+  - titre : String\\
+  - description : String\\
+  - active : boolean};
+
+% --- Inheritance (hollow triangle) ---
+\draw[-{Triangle[open,length=8pt,width=8pt]}, thick] (adm.north) -- (int.south);
+\draw[-{Triangle[open,length=8pt,width=8pt]}, thick] (cli.north) -- (int.south);
+
+% --- Client 1 - 1 Panier ---
+\draw[thick] (cli.east) -- (pan.west)
+  node[mult, pos=0.12, above] {1}
+  node[mult, pos=0.88, above] {1}
+  node[rel, midway, below] {poss\`ede};
+
+% --- Panier composition LignePanier ---
+\draw[{Diamond[length=9pt,width=6pt,fill=black]}-, thick] (pan.east) -- (lig.west)
+  node[mult, pos=0.12, above] {1}
+  node[mult, pos=0.88, above] {0..*}
+  node[rel, midway, below] {contient};
+
+% --- LignePanier -> Produit ---
+\draw[-{Stealth[length=7pt]}, thick] (lig.south) -- (pro.north)
+  node[mult, pos=0.12, right] {0..*}
+  node[mult, pos=0.88, right] {1}
+  node[rel, midway, right] {r\'ef\'erence};
+
+% --- Categorie aggregation Produit ---
+\draw[{Diamond[length=9pt,width=6pt,fill=white]}-, thick] (cat.east) -- (pro.west)
+  node[mult, pos=0.12, above] {1}
+  node[mult, pos=0.88, above] {0..*}
+  node[rel, midway, below] {regroupe};
+
+% --- Vitrine aggregation Categorie ---
+\draw[{Diamond[length=9pt,width=6pt,fill=white]}-, thick] (vit.east) -- (cat.west)
+  node[mult, pos=0.12, above] {1}
+  node[mult, pos=0.88, above] {0..*}
+  node[rel, midway, below] {pr\'esente};
+
+% --- Administrateur manages Produit (dependency, dashed) ---
+\coordinate (dep1) at (-6.0,-15.2);
+\coordinate (dep2) at (17.4,-15.2);
+\draw[-{Stealth[length=7pt]}, thick, dashed]
+  (adm.south) -- (dep1) -- (dep2) -- (pro.south);
+\node[rel] at (5.7,-15.2) {g\`ere};
+
+\end{tikzpicture}

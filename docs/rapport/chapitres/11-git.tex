@@ -1,0 +1,28 @@
+\chapter{Gestion de version}\label{chap:git}
+
+\section{Principes}
+Le dépôt \code{jee-ecommerce-jsf-jpa} est public sur GitHub. Il suit les règles de l'atelier~2 : commits atomiques qui
+compilent, messages au format \textit{Conventional Commits} \cite{conventional}, et aucun secret versionné
+(\code{db.properties} est ignoré ; seul \code{db.properties.example} est suivi).
+
+\section{Historique}
+Le tableau~\ref{tab:commits} donne la séquence. Chaque commit correspond à une couche ; le rapport est ajouté en dernier.
+
+\begin{table}[htbp]
+\centering
+\caption{Séquence de commits}\label{tab:commits}
+\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Étape} & \textbf{Message}\\
+\midrule
+Projet & \code{chore: initialise Maven project, database script and configuration template}\\
+Persistance & \code{feat(persistence): add JPA entities, utilities and schema tool}\\
+Services & \code{feat(service): add business services and JPA implementations}\\
+Web & \code{feat(web): add JSF managed beans, filters and configuration}\\
+Vues & \code{feat(views): add Facelets layout, composite components and pages}\\
+Tests & \code{test: add business, security and Facelets static checks}\\
+Rapport & \code{docs(report): add LaTeX report, figures and PDF}\\
+\bottomrule
+\end{tabularx}
+\end{table}

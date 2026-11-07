@@ -1,0 +1,61 @@
+\chapter{Incidents et diagnostics}\label{chap:incidents}
+
+Ce chapitre rassemble les problèmes rencontrés et la manière dont chacun a été diagnostiqué. Ils sont instructifs parce
+que, dans trois cas sur quatre, le symptôme visible ne désignait pas la cause.
+
+\section{Erreur 500 après une connexion réussie}
+\textbf{Symptôme.} Le formulaire de connexion accepte les identifiants, mais la page suivante est l'erreur 500
+de l'application ; en cliquant sur le panier ou la vitrine, on retombe sur la connexion avec « Connecte-toi pour continuer ».
+
+\textbf{Diagnostic.} Le symptôme secondaire (retour à la connexion) laisse croire à un défaut d'authentification. Il n'en est
+rien : la trace de Tomcat montre une exception au moment de la redirection.
+
+\begin{lstlisting}[caption={Trace de Tomcat (abrégée)},label={lst:trace}]
+SEVERE: Servlet.service() for servlet [FacesServlet] in context with path
+[/ecommerce-jsf-jpa] threw exception [javax/xml/bind/DatatypeConverter]
+java.lang.ClassNotFoundException: javax.xml.bind.DatatypeConverter
+  at com.sun.faces.util.ByteArrayGuardAESCTR.encrypt(ByteArrayGuardAESCTR.java:139)
+  at com.sun.faces.context.flash.ELFlash$PreviousNextFlashInfoManager.encode(ELFlash.java:1489)
+  at com.sun.faces.context.flash.ELFlash.doLastPhaseActions(ELFlash.java:722)
+  at com.sun.faces.context.ExternalContextImpl.redirect(ExternalContextImpl.java:656)
+  at com.sun.faces.application.NavigationHandlerImpl.handleNavigation(NavigationHandlerImpl.java:256)
+\end{lstlisting}
+
+\textbf{Cause.} Mojarra 2.2.x chiffre le cookie du \textit{flash} (qui transporte le message « Bienvenue » à travers la
+redirection) avec \code{javax.xml.bind.DatatypeConverter}. Cette classe appartenait au JDK jusqu'à Java~8 ; elle a été
+retirée avec Java~11. Sous Java~17, la première redirection qui conserve un message échoue donc, ici au moment de la navigation qui suit une
+connexion réussie. Le retour à la page de connexion s'explique, selon mon hypothèse, par l'identifiant de session renouvelé
+juste avant (\code{changeSessionId}) : la réponse 500 ne l'ayant pas transmis au navigateur, les requêtes suivantes ne
+reconnaissent plus l'utilisateur. Cette seconde partie est déduite et non observée directement ; la trace, elle, est sans ambiguïté.
+
+\textbf{Correction.} Ajouter \code{javax.xml.bind:jaxb-api:2.3.1} (extrait~\ref{lst:pom}). Aucun changement de code.
+
+\textbf{Leçon.} Une exception à la redirection peut ressembler à un problème d'authentification. On lit d'abord le
+journal du serveur, pas la page.
+
+\section{Faux positifs d'analyse statique dans Eclipse}
+\textbf{Symptôme.} Eclipse (outils web) signale des erreurs dans \code{vitrine.xhtml} et \code{erreur.xhtml} :
+« Could not coerce choice argument to boolean » et « Could not make numeric conversion », pour des expressions qui
+fonctionnent à l'exécution.
+
+\textbf{Cause.} L'analyseur d'EL ne connaît pas le type des variables d'un composant ni celui d'un attribut de requête
+(\code{requestScope['javax.servlet.error.status\_code']}) ; il ne peut pas vérifier une expression conditionnelle qui les mélange.
+
+\textbf{Correction.} Les décisions d'affichage sont passées dans Java (\code{Affichage}, \code{VitrineBean}) : la page
+appelle une méthode dont le type de retour est connu. La logique est de ce fait testable (chapitre~\ref{chap:tests}).
+Les avertissements restants (espaces de noms de passage, attributs SVG) sont sans effet et ne sont pas contournés.
+
+\section{Projet de l'atelier précédent dans l'espace de travail}
+\textbf{Symptôme.} L'onglet \textit{Problems} d'Eclipse affiche une erreur dans \code{panier.jsp}, fichier qui n'existe pas dans le
+nouveau projet.
+
+\textbf{Diagnostic.} Une recherche de \code{*.jsp} dans le dossier du projet ne renvoie rien, et \code{git status} du projet de l'atelier~2
+est propre : l'erreur vient du projet de l'atelier~2, ouvert dans le même espace de travail.
+
+\textbf{Correction.} Fermer l'autre projet, le retirer du serveur et filtrer la vue \textit{Problems} sur le projet courant. Le
+projet lui-même n'a pas été modifié. La phrase « No persistence.xml found in project » relève d'une autre cause :
+la facette JPA d'Eclipse, inutile ici puisque la persistance est configurée à la main, a été décochée.
+
+\section{Classes Java~17 illisibles par EclipseLink}
+Reconduit de l'atelier~2 et traité à la section~\ref{sec:asm} : sans \code{release=11}, aucune entité n'est
+découverte et la base reste vide.

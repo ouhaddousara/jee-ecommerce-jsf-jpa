@@ -1,0 +1,38 @@
+% Pages -> beans -> services. Included inside a resizebox; no \begin{document} here.
+\begin{tikzpicture}[
+  node distance=0.9cm and 2.4cm,
+  box/.style={draw=atlasteal,fill=codebg,rounded corners=2pt,minimum width=3.6cm,minimum height=0.85cm,align=center,font=\small},
+  page/.style={box,draw=atlasink,fill=white},
+  bean/.style={box,fill=atlasteal!12},
+  svc/.style={box,fill=atlassaffron!18,draw=atlassaffron!80!black},
+  arr/.style={-{Stealth[length=2mm]},thick,atlasink!70},
+  col/.style={font=\bfseries\small\color{atlasteal}}]
+  \node[page] (p1) {connexion.xhtml};
+  \node[page,below=of p1] (p2) {inscription.xhtml};
+  \node[page,below=of p2] (p3) {vitrine.xhtml\\detail.xhtml};
+  \node[page,below=of p3] (p4) {panier.xhtml};
+  \node[page,below=of p4] (p5) {admin/produits.xhtml\\admin/produit-form.xhtml};
+  \node[page,below=of p5] (p6) {admin/categories.xhtml\\admin/categorie-form.xhtml};
+
+  \node[bean,right=of p1] (b1) {ConnexionBean\\\scriptsize ViewScoped};
+  \node[bean,right=of p2] (b2) {InscriptionBean\\\scriptsize ViewScoped};
+  \node[bean,right=of p3] (b3) {VitrineBean, DetailBean\\\scriptsize ViewScoped};
+  \node[bean,right=of p4] (b4) {PanierBean\\\scriptsize ViewScoped};
+  \node[bean,right=of p5] (b5) {ProduitAdminBean\\\scriptsize ViewScoped};
+  \node[bean,right=of p6] (b6) {CategorieAdminBean\\\scriptsize ViewScoped};
+
+  \node[svc,right=of b1] (s1) {InternauteService};
+  \node[svc] (s3) at ($(b3-|s1)$) {CatalogueService};
+  \node[svc] (s4) at ($(b4-|s1)$) {PanierService};
+  \node[svc] (s5) at ($(b5-|s1)$) {GestionCatalogueService};
+
+  \draw[arr] (p1)--(b1); \draw[arr] (p2)--(b2); \draw[arr] (p3)--(b3);
+  \draw[arr] (p4)--(b4); \draw[arr] (p5)--(b5); \draw[arr] (p6)--(b6);
+  \draw[arr] (b1)--(s1); \draw[arr] (b2.east)--(s1.south west);
+  \draw[arr] (b3)--(s3); \draw[arr] (b4)--(s4);
+  \draw[arr] (b5)--(s5); \draw[arr] (b6.east)--(s5.south west);
+
+  \node[col,above=0.3cm of p1] {Vues Facelets};
+  \node[col,above=0.3cm of b1] {Beans CDI (@Named)};
+  \node[col,above=0.3cm of s1] {Services (atelier 2)};
+\end{tikzpicture}

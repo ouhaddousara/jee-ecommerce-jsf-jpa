@@ -1,0 +1,92 @@
+\chapter{Vues Facelets}\label{chap:vues}
+
+\section{Gabarit et composition}
+Facelets remplace JSP comme technologie de vue : les pages sont des documents XHTML bien formés, ce qui permet de les
+valider avant de lancer le serveur. Le gabarit \code{WEB-INF/templates/layout.xhtml} contient le squelette commun
+(en-tête, menu latéral, zone de messages, pied de page) et trois points d'insertion : les métadonnées, le contenu et, au besoin, des
+scripts. Chaque page déclare le gabarit avec \code{template=} et remplit ses zones avec \code{ui:define}. Le gabarit est placé sous
+\code{WEB-INF} : aucune adresse ne permet de le demander directement.
+
+Les messages JSF s'affichent à un seul endroit, dans le gabarit, avec une boucle sur \code{facesContext.messageList}. La classe
+CSS de chaque message dépend de sa gravité.
+
+\lstinputlisting[language=XML,caption={Affichage des messages dans le gabarit},label={lst:messages}]{extraits/layout-messages.txt}
+
+\section{Composants composites}
+Cinq fragments répétés dans plusieurs pages sont devenus des composants composites, rangés dans
+\code{resources/components} (espace de noms \code{http://xmlns.jcp.org/jsf/composite/components}, préfixe \code{t}).
+
+\begin{table}[htbp]
+\centering
+\caption{Composants composites}\label{tab:composites}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Composant} & \textbf{Rôle}\\
+\midrule
+\code{t:csrf} & Champ caché portant le jeton anti-CSRF ; présent dans chaque formulaire.\\
+\code{t:icone} & Icône vectorielle, dessinée à partir d'un tracé fourni par \code{Affichage.icone}.\\
+\code{t:visuel} & Image d'un produit, ou pastille d'initiales quand il n'a pas d'image.\\
+\code{t:vide} & Bloc « rien à afficher » avec illustration, titre, texte et action facultative.\\
+\code{t:champ} & Champ de formulaire (texte, mot de passe ou zone de texte) avec son libellé et l'erreur correspondante, lue dans la table d'erreurs du service.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Un composant composite n'a pas de classe Java ; c'est un modèle paramétré. Sa valeur est de rendre impossible un oubli :
+tout formulaire inclut \code{t:csrf}, et un test statique le vérifie (chapitre~\ref{chap:tests}). Comme ces fichiers ne sont
+pas des pages, le \code{web.xml} interdit leur accès direct.
+
+Le composant \code{t:champ} traduit un choix de conception : la validation JSF (\code{required}, validateurs) n'est pas
+utilisée. Les règles de saisie vivent dans la couche service, comme à l'atelier~2, et renvoient une table
+\guillemotleft~champ $\rightarrow$ message~\guillemotright{}. Une seule source de validation évite que la page et le métier divergent.
+
+\section{Composants JSF et politique de sécurité du contenu}
+La politique \code{script-src 'self'} (chapitre~\ref{chap:securite}) interdit tout script en ligne. Or plusieurs
+composants JSF classiques en génèrent : \code{h:commandLink} produit un lien dont le \code{onclick} appelle
+une fonction JavaScript, et \code{f:ajax} injecte du code. Le choix est donc le suivant.
+
+\begin{itemize}
+  \item Les actions sont déclenchées par \code{h:commandButton}, un vrai bouton d'envoi qui n'a besoin d'aucun script.
+  \item La navigation simple utilise des liens HTML ordinaires, dont l'adresse est calculée par le bean.
+  \item La confirmation avant suppression passe par un attribut \code{data-confirm} lu par \code{app.js}, un fichier
+        servi par le serveur lui-même.
+  \item La recherche est un formulaire \code{GET} en HTML pur, pas un formulaire JSF.
+\end{itemize}
+
+Cette contrainte coûte quelques lignes en moins de confort, et apporte une garantie : aucune injection de balise
+\code{<script>} ne peut s'exécuter, même si un échappement venait à être oublié. Elle est vérifiée par
+\code{VuesChecks}, qui refuse \code{h:commandLink}, \code{f:ajax} et tout attribut \code{on*}.
+
+\section{Pages réalisées}
+Seize fichiers \code{.xhtml} composent l'interface. Les figures qui suivent montrent le parcours d'un visiteur, d'un client,
+puis d'un administrateur.
+
+\subsection{Vitrine et fiche produit}
+La vitrine affiche des cartes de produits, des pastilles de catégories avec leur effectif, un compteur et une
+pagination. Selon le profil, le bas de chaque carte propose « Ajouter au panier » (client), « Se connecter pour acheter »
+(visiteur), ou rien (administrateur).
+
+\fig{06-vitrine}{Vitrine : cartes de produits et catégories}{fig:vitrine}
+\fig{07-vitrine-recherche}{Recherche et filtre conservés dans l'adresse}{fig:recherche}
+\fig{08-detail-produit}{Fiche d'un produit}{fig:detail}
+
+\subsection{Connexion et inscription}
+En cas d'échec de connexion, un message rouge s'affiche et le champ du mot de passe est vidé. Le formulaire
+d'inscription valide tous les champs en une passe et affiche une erreur sous chacun, en plus d'un message général.
+
+\fig{09-connexion-erreur}{Connexion refusée : message d'erreur}{fig:connexion}
+\fig{10-inscription-validation}{Inscription : erreurs de validation sous les champs}{fig:inscription}
+
+\subsection{Panier}
+Le panier liste les lignes avec leur sous-total, un champ de quantité et le total en dirhams. Lorsqu'une quantité dépasse
+le stock, le service lève une exception métier ; le bean la transforme en message et le panier reste inchangé.
+
+\fig{11-panier}{Panier d'un client}{fig:panier}
+\fig{12-panier-stock-refuse}{Refus d'une quantité supérieure au stock}{fig:stock}
+
+\subsection{Administration}
+Les écrans d'administration sont réservés au rôle \code{ADMIN} : liste des produits avec actions (modifier, retirer de la
+vente, supprimer avec confirmation), formulaire produit, gestion des catégories.
+
+\fig{14-admin-produits}{Administration : liste des produits}{fig:admin}
+\fig{15-admin-produit-form}{Formulaire produit : erreurs de validation}{fig:adminform}

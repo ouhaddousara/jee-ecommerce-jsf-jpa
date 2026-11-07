@@ -1,0 +1,25 @@
+@ApplicationScoped
+public class EntityManagerFactoryProducer {
+
+    @Produces
+    @ApplicationScoped
+    public EntityManagerFactory creer() {
+        return PersistenceConfig.createEntityManagerFactory();
+    }
+
+    public void fermer(@Disposes EntityManagerFactory emf) {
+        if (emf.isOpen()) {
+            emf.close();
+        }
+    }
+
+    /**
+     * Forces the creation at startup: a wrong password or an unreachable MySQL
+     * shows up in the Tomcat log when the application starts, not at the
+     * first visitor's request.
+     */
+    void demarrer(@Observes @Initialized(ApplicationScoped.class) Object evenement,
+                  EntityManagerFactory emf) {
+        emf.isOpen();
+    }
+}

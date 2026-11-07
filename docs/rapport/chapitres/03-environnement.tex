@@ -1,0 +1,66 @@
+\chapter{Environnement et construction}\label{chap:environnement}
+
+\section{Versions retenues}
+Le tableau~\ref{tab:versions} liste les composants et la raison de chaque version. Le sujet fournit une liste de
+dépendances ; plusieurs entrées ont dû être corrigées pour fonctionner avec le JDK et Tomcat installés.
+
+\begin{table}[htbp]
+\centering
+\caption{Composants et versions}\label{tab:versions}
+\small
+\begin{tabularx}{\linewidth}{@{}llX@{}}
+\toprule
+\textbf{Composant} & \textbf{Version} & \textbf{Remarque}\\
+\midrule
+JDK (exécution) & 17 & Tomcat et Eclipse l'utilisent.\\
+Compilation & \code{release} 11 & EclipseLink 2.7.5 ne lit pas les classes Java 17 (section~\ref{sec:asm}).\\
+Tomcat & 9.0.123, port 8081 & Espace de noms \code{javax.*}, compatible JSF 2.2.\\
+JSF (Mojarra) & 2.2.20 & Tomcat ne fournit pas JSF : \code{jsf-api} et \code{jsf-impl} sont embarqués dans le WAR.\\
+CDI (Weld) & 3.1.9.Final & Version \textit{servlet shaded} pour Tomcat.\\
+JPA (EclipseLink) & 2.7.5 & Apporte l'API \code{javax.persistence} 2.2.\\
+Pilote MySQL & 8.0.33 & Remplace le 8.0.12 du sujet, compatible MySQL 8.\\
+Servlet API & 4.0.1, \code{provided} & Fournie par Tomcat ; ne doit pas se trouver dans le WAR.\\
+JAXB API & 2.3.1 & Absente du JDK depuis Java 11 ; requise par Mojarra (chapitre~\ref{chap:incidents}).\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Corrections apportées aux dépendances du sujet}
+\begin{itemize}
+  \item \textbf{Servlet API} : le sujet donne la version 4.0.0 sans portée. Sans \code{provided}, l'API se retrouve
+        dans le WAR et entre en conflit avec celle de Tomcat.
+  \item \textbf{JPA} : l'artefact \code{org.eclipse.persistence:javax.persistence:2.0.0} du sujet n'est \emph{pas}
+        déclaré. EclipseLink 2.7.5 apporte déjà l'API 2.2 ; deux versions de l'API sur le même chemin de classes
+        provoqueraient des conflits.
+  \item \textbf{JSTL et JSP} : Facelets n'en a pas besoin (les balises \code{c:} et \code{fn:} sont implémentées dans
+        Mojarra). Les déclarations de l'atelier~2 sont donc retirées.
+  \item \textbf{JAXB} : ajouté après l'incident du chapitre~\ref{chap:incidents}.
+\end{itemize}
+
+\lstinputlisting[language=XML,caption={Extrait du \texttt{pom.xml} : JSF et JAXB},label={lst:pom}]{extraits/pom-jsf-jaxb.txt}
+
+\section{Configuration de JSF}
+Le contrôleur frontal est déclaré dans \code{web.xml} et associé au motif \code{*.xhtml}. Ce choix garde des adresses
+lisibles (\code{vitrine.xhtml?categorie=2}) et signifie qu'une page Facelets est atteinte directement par son
+nom, sans préfixe \code{/faces/}.
+
+\lstinputlisting[language=XML,caption={Déclaration de \texttt{FacesServlet}},label={lst:faces}]{extraits/web-facesservlet.txt}
+
+Le même fichier configure la phase de développement (\code{PROJECT\_STAGE=Development}, messages d'erreur plus
+détaillés), la sauvegarde de l'état de la vue sur le serveur, l'ordre des filtres (sécurité puis authentification),
+les pages d'erreur (403, 404, 405, 500 et toute exception) et un bloc de sécurité interdisant l'accès direct à
+\code{/resources/components/*}.
+
+\section{Construction et démarrage}
+La construction se fait par Maven (\code{mvn -q clean package}), le déploiement par Eclipse sur Tomcat. Au démarrage,
+la console doit montrer, dans l'ordre : l'initialisation de Weld, celle de Mojarra, puis la connexion EclipseLink
+(\code{login successful}). La figure~\ref{fig:demarrage} en donne la trace.
+
+\fig{05-tomcat-demarrage}{Démarrage de Tomcat : Weld, Mojarra et connexion EclipseLink}{fig:demarrage}
+
+\section{Compiler pour Java 11 sous Java 17}\label{sec:asm}
+EclipseLink 2.7.5 lit les classes des entités avec une version d'ASM qui rejette les fichiers de classe plus récents
+que Java 13 (\guillemotleft~Unsupported class file major version 61~\guillemotright{}). Compilées pour Java 17, les entités ne seraient
+pas découvertes et l'application démarrerait sans table. La propriété \code{maven.compiler.release=11} compile
+pour Java 11 tout en gardant le JDK 17 : les classes ainsi produites s'exécutent normalement sous Java 17. Cette
+contrainte était déjà apparue à l'atelier~2 ; elle est ici reconduite et documentée dans le \code{pom.xml}.

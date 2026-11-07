@@ -1,0 +1,25 @@
+public String ouvrir(Internaute internaute) {
+    HttpServletRequest req = (HttpServletRequest) contexte().getRequest();
+    HttpSession ancienne = req.getSession(true);
+    String retour = (String) ancienne.getAttribute(AuthFilter.RETOUR);
+    req.changeSessionId();
+
+    HttpSession session = req.getSession();
+    session.removeAttribute(AuthFilter.RETOUR);
+    SessionUser user = SessionUser.de(internaute);
+    session.setAttribute(SessionUser.CLE, user);
+    SecurityFilter.nouveauJeton(session);
+    session.setAttribute(COMPTEUR,
+            user.isClient() ? paniers.consulter(user.getId()).getNombreArticles() : 0);
+
+    String cible;
+    if (user.isAdmin()) {
+        cible = "/admin/produits.xhtml";
+    } else {
+        cible = Chemins.cheminSur(retour, "/vitrine.xhtml");
+        if (cible.startsWith("/admin")) {
+            cible = "/vitrine.xhtml";
+        }
+    }
+    return Chemins.avecParametre(cible, "faces-redirect", "true");
+}

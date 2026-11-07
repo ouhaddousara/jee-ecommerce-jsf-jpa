@@ -1,0 +1,56 @@
+\chapter{Sécurité}\label{chap:securite}
+
+\section{Ce qui est repris, ce qui est adapté}
+Les mécanismes de l'atelier~2 sont conservés ; leur emplacement change, parce que les servlets ont disparu.
+Le tableau~\ref{tab:menaces} relie chaque menace à sa parade dans la version JSF.
+
+\begin{table}[htbp]
+\centering
+\caption{Menaces et parades}\label{tab:menaces}
+\small
+\begin{tabularx}{\linewidth}{@{}p{3.2cm}X@{}}
+\toprule
+\textbf{Menace} & \textbf{Parade}\\
+\midrule
+Injection SQL & Requêtes JPQL paramétrées, aucun assemblage de texte (inchangé).\\
+XSS & Facelets échappe par défaut toute expression \code{\#\{...\}} ; aucune sortie en \code{escape="false"} ; CSP \code{script-src 'self'}.\\
+CSRF & Jeton \code{\_csrf} par session, inséré par \code{t:csrf}, vérifié en temps constant par \code{SecurityFilter} sur tout POST. À cela s'ajoute le \code{ViewState} de JSF.\\
+Fixation de session & \code{changeSessionId()} et renouvellement du jeton à la connexion (\code{UserSession.ouvrir}).\\
+Force brute & \code{LoginGuard} : 5 essais par 15 minutes, par couple IP / adresse.\\
+Redirection ouverte & \code{Chemins.cheminSur} n'accepte que les chemins internes (refus de \code{//}, d'URL absolue, d'antislash, de saut de ligne).\\
+Contrôle d'accès & \code{AuthFilter} par motif d'adresse : \code{/admin/*} exige le rôle \code{ADMIN}, \code{/panier.xhtml} le rôle \code{CLIENT} (réponse 403 sinon).\\
+Mots de passe & PBKDF2 avec sel aléatoire ; jamais renvoyés à la page.\\
+Accès aux composants & Contrainte de sécurité sur \code{/resources/components/*}.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Filtres}
+Deux filtres s'appliquent, dans cet ordre déclaré dans \code{web.xml}.
+
+\textbf{\code{SecurityFilter}} (toutes les adresses) : fixe l'encodage UTF-8, ajoute les en-têtes de sécurité
+(\code{Content-Security-Policy}, \code{X-Content-Type-Options}, \code{X-Frame-Options}, \code{Referrer-Policy}) et \code{Cache-Control: no-store}, génère le jeton CSRF à la
+première visite et refuse tout \code{POST} dont le jeton est absent ou différent.
+
+\textbf{\code{AuthFilter}} (\code{/panier.xhtml}, \code{/admin/*}) : sans utilisateur en session, redirige vers
+\code{connexion.xhtml?requis=1} et mémorise l'adresse demandée. Après connexion, l'utilisateur retourne où il voulait aller ; cette adresse
+est revérifiée par \code{Chemins.cheminSur} avant la redirection.
+
+\section{Politique de sécurité du contenu}
+\begin{lstlisting}[language=Java,caption={Politique appliquée à toutes les réponses},label={lst:csp}]
+default-src 'self'; img-src 'self' data: https:;
+style-src 'self' 'unsafe-inline'; script-src 'self';
+frame-ancestors 'none'; form-action 'self'; base-uri 'self'
+\end{lstlisting}
+
+\code{script-src 'self'} est le c\oe{}ur : seuls les scripts servis par l'application s'exécutent. \code{frame-ancestors 'none'}
+interdit l'inclusion de l'application dans un cadre d'un autre site (détournement de clic) ; \code{form-action 'self'} empêche un
+formulaire injecté d'envoyer ses données ailleurs. \code{style-src} garde \code{'unsafe-inline'} parce que JSF et les
+composants produisent des attributs \code{style} ; c'est un compromis assumé, le risque d'un style injecté étant bien
+moindre que celui d'un script.
+
+\section{Contrôle d'accès}
+Un utilisateur qui n'a pas le rôle requis (par exemple un client devant une page d'administration) reçoit une réponse 403 affichée dans la page d'erreur de
+l'application, pas la page technique de Tomcat.
+
+\fig{16-acces-refuse}{Accès refusé : un client demande une page d'administration}{fig:403}

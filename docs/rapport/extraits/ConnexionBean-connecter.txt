@@ -1,0 +1,26 @@
+public String connecter() {
+    String adresseEmail = email == null ? "" : email.trim();
+    HttpServletRequest req = (HttpServletRequest) FacesContext.getCurrentInstance()
+            .getExternalContext().getRequest();
+    String cle = req.getRemoteAddr() + "|" + adresseEmail.toLowerCase(Locale.ROOT);
+
+    long attente = guard.secondesRestantes(cle);
+    if (attente > 0) {
+        Messages.erreur("Trop de tentatives. Réessaie dans " + ((attente + 59) / 60) + " minute(s).");
+        motDePasse = null;
+        return null;
+    }
+    try {
+        Internaute internaute = internautes.authentifier(adresseEmail, motDePasse == null ? "" : motDePasse);
+        guard.reussite(cle);
+        String cible = userSession.ouvrir(internaute);
+        Messages.succes("Bienvenue " + internaute.getPrenom() + " !");
+        Messages.apresRedirection();
+        return cible;
+    } catch (MetierException e) {
+        guard.echec(cle);
+        Messages.erreur(e.getMessage());
+        motDePasse = null; // the password is never sent back to the page
+        return null;
+    }
+}

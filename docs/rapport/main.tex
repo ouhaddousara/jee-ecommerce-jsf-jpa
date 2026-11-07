@@ -1,0 +1,179 @@
+% Atelier JEE 3 - Application web e-commerce basée sur JSF et JPA
+% Compile with pdfLaTeX (Overleaf default). Chapters are in chapitres/, pictures in figures/.
+\documentclass[11pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes.multipart,arrows.meta,calc,positioning,fit,backgrounds}
+\usepackage[hidelinks,pdfusetitle]{hyperref}
+
+% ---------- Identity (check these three lines) ----------
+\newcommand{\auteur}{Sara Ouhaddou}
+\newcommand{\encadrant}{Pr.~Lotfi Elaachak}
+\newcommand{\dateRapport}{Novembre 2026}
+% Number of automated checks reported by the Verifications class.
+\newcommand{\nbChecks}{215}
+
+% ---------- Colors (same identity as the application) ----------
+\definecolor{atlasteal}{HTML}{0F6E66}
+\definecolor{atlassaffron}{HTML}{E9A820}
+\definecolor{atlasink}{HTML}{12201E}
+\definecolor{codebg}{HTML}{F5F8F7}
+
+\hypersetup{colorlinks=true,linkcolor=atlasteal,urlcolor=atlasteal,citecolor=atlasteal}
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{3em}
+\setlength{\headheight}{14pt}
+\captionsetup{font=small,labelfont={bf,color=atlasteal},labelsep=period}
+
+% ---------- Headers ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{atlasteal}{Atelier JEE 3 --- JSF et JPA}}
+\fancyhead[R]{\small\leftmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ---------- Chapter style ----------
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{atlasink}}
+  {\small\textcolor{atlassaffron}{\MakeUppercase{Chapitre}~\thechapter}}{6pt}
+  {\Huge}[\vspace{2pt}\textcolor{atlasteal}{\titlerule[2pt]}]
+\titlespacing*{\chapter}{0pt}{-10pt}{24pt}
+\titleformat{\section}{\Large\bfseries\color{atlasteal}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{atlasink}}{\thesubsection}{0.6em}{}
+
+% ---------- Listings (the literate list lets accented letters and guillemets through) ----------
+\lstdefinestyle{atlas}{
+  basicstyle=\ttfamily\footnotesize, backgroundcolor=\color{codebg},
+  keywordstyle=\color{atlasteal}\bfseries, commentstyle=\color{gray}\itshape,
+  stringstyle=\color{orange!70!black}, frame=single, rulecolor=\color{atlasteal!40},
+  breaklines=true, breakatwhitespace=false, columns=fullflexible, keepspaces=true,
+  showstringspaces=false, xleftmargin=4pt, xrightmargin=4pt, aboveskip=8pt, belowskip=6pt,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {â}{{\^a}}1 {ç}{{\c c}}1 {ô}{{\^o}}1
+           {î}{{\^i}}1 {’}{{'}}1 {·}{{\textperiodcentered}}1 {…}{{\ldots}}1 {→}{{\ensuremath{\rightarrow}}}1 {û}{{\^u}}1 {ù}{{\`u}}1 {É}{{\'E}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1}
+\lstset{style=atlas}
+
+% ---------- Figure with fallback frame when the screenshot is not there yet ----------
+% \fig{file-without-extension}{caption}{label}
+% Looks for figures/<file>.png, then .jpg, then .jpeg.
+\newcommand{\figimage}[1]{\includegraphics[width=\linewidth,height=0.42\textheight,keepaspectratio]{#1}}
+\newcommand{\fig}[3]{%
+  \begin{figure}[htbp]\centering
+  \IfFileExists{figures/#1.png}{\figimage{figures/#1.png}}{%
+  \IfFileExists{figures/#1.jpg}{\figimage{figures/#1.jpg}}{%
+  \IfFileExists{figures/#1.jpeg}{\figimage{figures/#1.jpeg}}{%
+    \fbox{\parbox[c][4.5cm][c]{0.92\linewidth}{\centering\itshape Capture à insérer : figures/#1.png}}}}}
+  \caption{#2}\label{#3}
+  \end{figure}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\termeA}[1]{\textit{#1}}
+
+\begin{document}
+
+% ---------- Cover ----------
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[atlasink] (current page.north west) rectangle ([yshift=-11.2cm]current page.north east);
+  \fill[atlasteal] ([yshift=-11.2cm]current page.north west) rectangle ([yshift=-11.5cm]current page.north east);
+  \fill[atlassaffron] ([yshift=-11.2cm]current page.north west) rectangle ([xshift=5cm,yshift=-11.5cm]current page.north west);
+\end{tikzpicture}
+\vspace*{1.2cm}
+{\color{white}
+{\small\textcolor{atlassaffron}{\bfseries FACULT\'E DES SCIENCES ET TECHNIQUES DE TANGER}}\\[2pt]
+{\small Cycle ing\'enieur LSI}\\[1.4cm]
+{\fontsize{30}{34}\selectfont\bfseries Atelier JEE 3\par}
+\vspace{6pt}
+{\Large Application web e-commerce\\ bas\'ee sur JSF et JPA\par}
+}
+\vfill
+\begin{tabular}{@{}ll}
+\textbf{R\'ealis\'e par} & \auteur\\[4pt]
+\textbf{Encadrant} & \encadrant\\[4pt]
+\textbf{Module} & Java EE (JSF, CDI, JPA)\\[4pt]
+\textbf{D\'ep\^ot} & \texttt{jee-ecommerce-jsf-jpa}\\[4pt]
+\textbf{Date} & \dateRapport
+\end{tabular}
+\vspace{1.5cm}
+\end{titlepage}
+
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+Ce rapport présente la deuxième version d'« Atlas Boutique », l'application de commerce électronique de
+l'atelier~2, dont la couche web est entièrement réécrite avec \textbf{JavaServer Faces 2.2} (Mojarra) et des
+pages \textbf{Facelets}. Les entités JPA, les services, l'injection CDI et la sécurité sont conservés ; les
+servlets et les pages JSP sont remplacés par six beans CDI, un par « gestion » (connexion, inscription,
+vitrine, panier, produits, catégories), et par seize pages \texttt{.xhtml} bâties sur un gabarit et cinq
+composants composites.
+
+Le document explique les décisions plutôt que le code : pourquoi garder les services de l'atelier~2,
+comment le cycle de vie JSF s'accorde avec le motif Post/Redirect/Get, comment concilier les composants JSF
+avec une politique de sécurité du contenu stricte (\texttt{script-src 'self'}), et comment déplacer les
+règles d'affichage dans Java pour contenter les analyseurs d'expressions EL. Un incident d'exécution
+(classe \texttt{javax.xml.bind.DatatypeConverter} absente sous Java 17) est détaillé. L'ensemble est vérifié
+par \nbChecks{} contrôles automatisés et un parcours manuel de quinze scénarios.
+
+\textbf{Mots-clés :} Java EE, JSF, Facelets, CDI, Weld, JPA, EclipseLink, MySQL, Tomcat, sécurité web.
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\input{chapitres/01-introduction}
+\input{chapitres/02-conception}
+\input{chapitres/03-environnement}
+\input{chapitres/04-persistance}
+\input{chapitres/05-services}
+\input{chapitres/06-jsf}
+\input{chapitres/07-vues}
+\input{chapitres/08-securite}
+\input{chapitres/09-tests}
+\input{chapitres/10-incidents}
+\input{chapitres/11-git}
+\input{chapitres/12-perspectives}
+\input{chapitres/13-conclusion}
+
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Bibliographie}
+\bibitem{jsf} Oracle / JCP. \textit{JSR 344 : JavaServer Faces 2.2}. \url{https://jcp.org/en/jsr/detail?id=344}
+\bibitem{mojarra} Eclipse Foundation. \textit{Mojarra, implémentation de JSF}. \url{https://eclipse-ee4j.github.io/mojarra/}
+\bibitem{cdi} Oracle / JCP. \textit{JSR 365 : Contexts and Dependency Injection for Java 2.0}. \url{https://jcp.org/en/jsr/detail?id=365}
+\bibitem{jpa} Oracle / JCP. \textit{JSR 338 : Java Persistence 2.2}. \url{https://jcp.org/en/jsr/detail?id=338}
+\bibitem{servlet} Oracle / JCP. \textit{JSR 369 : Java Servlet 4.0}. \url{https://jcp.org/en/jsr/detail?id=369}
+\bibitem{eclipselink} Eclipse Foundation. \textit{EclipseLink Documentation (2.7)}. \url{https://www.eclipse.org/eclipselink/documentation/}
+\bibitem{weld} Red Hat. \textit{Weld, implémentation de référence de CDI}. \url{https://weld.cdi-spec.org/}
+\bibitem{tomcat} Apache Software Foundation. \textit{Apache Tomcat 9 Documentation}. \url{https://tomcat.apache.org/tomcat-9.0-doc/}
+\bibitem{mysql} Oracle. \textit{MySQL 8.0 Reference Manual}. \url{https://dev.mysql.com/doc/refman/8.0/en/}
+\bibitem{owaspcsrf} OWASP. \textit{Cross-Site Request Forgery Prevention Cheat Sheet}. \url{https://cheatsheetseries.owasp.org/}
+\bibitem{owaspredirect} OWASP. \textit{Unvalidated Redirects and Forwards Cheat Sheet}. \url{https://cheatsheetseries.owasp.org/}
+\bibitem{csp} W3C. \textit{Content Security Policy Level 3}. \url{https://www.w3.org/TR/CSP3/}
+\bibitem{prg} \textit{Post/Redirect/Get}, motif de conception web. \url{https://en.wikipedia.org/wiki/Post/Redirect/Get}
+\bibitem{conventional} \textit{Conventional Commits 1.0.0}. \url{https://www.conventionalcommits.org/}
+\bibitem{fowler} M.~Fowler. \textit{Patterns of Enterprise Application Architecture}, Addison-Wesley, 2002 (Front Controller, Page Controller, Single Table Inheritance).
+\end{thebibliography}
+
+\appendix
+\input{chapitres/annexes}
+
+\end{document}

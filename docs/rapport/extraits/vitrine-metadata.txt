@@ -1,0 +1,7 @@
+<f:metadata>
+  <f:viewParam name="categorie" value="#{vitrineBean.categorie}"/>
+  <f:viewParam name="q" value="#{vitrineBean.q}"/>
+  <f:viewParam name="page" value="#{vitrineBean.page}"/>
+  <f:viewParam name="deconnecte" value="#{vitrineBean.deconnecte}"/>
+  <f:viewAction action="#{vitrineBean.init}"/>
+</f:metadata>

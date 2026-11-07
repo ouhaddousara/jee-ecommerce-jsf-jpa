@@ -1,0 +1,28 @@
+\chapter{Services et injection CDI}\label{chap:services}
+
+\section{Quatre interfaces}
+La couche service expose quatre interfaces : \code{InternauteService} (inscription, authentification),
+\code{CatalogueService} (lecture : vitrine, catégories, recherche paginée, fiche produit), \code{PanierService}
+(opérations sur le panier) et \code{GestionCatalogueService} (administration). Les beans ne connaissent que ces
+interfaces ; les classes \code{Jpa*Service} sont des implémentations interchangeables.
+
+\section{Transactions centralisées}
+Toute écriture passe par \code{TransactionRunner}. Il ouvre un \code{EntityManager}, démarre la transaction, exécute
+l'opération, valide ou annule, puis ferme. Aucun bean, aucun service ne manipule une transaction à la main. L'extrait
+ci-dessous montre le principe : une seule porte d'entrée, un seul endroit où une transaction peut rester ouverte par
+erreur.
+
+\lstinputlisting[language=Java,caption={Écriture transactionnelle},label={lst:tx}]{extraits/TransactionRunner-write.txt}
+
+\section{CDI sur Tomcat}
+Tomcat n'est pas un serveur d'applications complet : il ne fournit pas CDI. Weld est donc embarqué, et trois
+éléments le branchent : \code{beans.xml} (mode \guillemotleft~annoté~\guillemotright{}), une ressource \code{BeanManager} dans
+\code{META-INF/context.xml}, et la référence correspondante dans \code{web.xml}. Une fabrique
+(\code{EntityManagerFactoryProducer}) fournit l'\code{EntityManagerFactory} unique, créé à la première demande.
+
+\lstinputlisting[language=Java,caption={Production de l'\texttt{EntityManagerFactory}},label={lst:emf}]{extraits/EntityManagerFactoryProducer.txt}
+
+\section{Pourquoi cette couche n'a pas bougé}
+Les services ne dépendent ni de \code{HttpServletRequest}, ni de JSF. C'est ce qui a rendu l'option~A possible :
+changer la technologie web n'a demandé aucune modification d'une classe de \code{ma.fstt.service} ou de
+\code{ma.fstt.jpa}.

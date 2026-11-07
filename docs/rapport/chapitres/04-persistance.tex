@@ -1,0 +1,24 @@
+\chapter{Persistance}\label{chap:persistance}
+
+La couche de persistance est reprise sans modification de l'atelier~2. Ce chapitre en rappelle les décisions, car
+elles conditionnent le comportement des beans.
+
+\section{Unité de persistance}
+Le fichier \code{persistence.xml} déclare une unité en \code{RESOURCE\_LOCAL}, liste explicitement les huit entités et
+fixe \code{jpa.ddl=none} : EclipseLink ne crée jamais les tables lui-même. Le schéma est produit par un outil
+dédié, \code{SchemaTool} (mode \code{RESET}), qui génère les tables puis ajoute les contraintes que le mappage seul ne
+sait pas exprimer (\code{CHECK}, unicité composite, colonne discriminante non nulle).
+
+\section{Tables obtenues}
+Six tables sont créées. La figure~\ref{fig:tables} montre le résultat dans MySQL après \code{SchemaTool}.
+
+\fig{04-mysql-tables}{Tables créées dans la base \texttt{ecommerce\_jsf}}{fig:tables}
+
+\section{Verrouillage optimiste}
+\code{Produit} porte une colonne \code{@Version}. Si deux clients ajoutent au panier le dernier exemplaire en même
+temps, le second voit sa transaction refusée plutôt que d'écraser la première. Le bean n'a rien à faire : l'exception
+est traduite en message métier par la couche service.
+
+\section{Refus de la base}
+Les contraintes de la base interceptent ce que la couche métier aurait oublié. Elles sont traduites en messages
+lisibles par la classe \code{SqlErrors}, de sorte qu'un bean n'affiche jamais un message SQL brut.

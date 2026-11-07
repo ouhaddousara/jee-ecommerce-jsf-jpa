@@ -1,0 +1,15 @@
+\chapter{Conclusion}\label{chap:conclusion}
+
+L'atelier~3 a transformé une application MVC2 en application JSF sans toucher à une seule classe de la couche métier ni de la
+persistance. Cette observation est la plus importante du travail : la séparation en couches de l'atelier~2 a rempli
+son rôle, et le coût d'un changement de technologie web s'est limité à quinze classes et seize pages.
+
+Trois idées en ressortent. D'abord, JSF déplace la réflexion du \textit{chemin d'une requête} vers le \textit{cycle de vie d'une vue} ; les
+portées (\code{@ViewScoped}, jamais \code{@SessionScoped} ici) et le motif Post/Redirect/Get demandent une attention
+constante. Ensuite, une politique de sécurité stricte contraint le choix des composants : renoncer à
+\code{h:commandLink} et à \code{f:ajax} est un arbitrage, pas une limite. Enfin, sortir la logique d'affichage dans des
+méthodes Java rend les vues plus simples, les tests possibles et les analyseurs statiques silencieux.
+
+Les limites sont connues : la commande n'est pas traitée, le limiteur de connexions est local à un serveur, et
+Tomcat, MySQL et Maven n'ont été vérifiés que sur ma machine, les tests automatisés couvrant ce qui s'exécute sans serveur. Le rapport
+rend compte de ces deux niveaux de vérification et des incidents qui les ont séparés.

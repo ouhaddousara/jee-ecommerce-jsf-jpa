@@ -1,0 +1,54 @@
+\chapter{Introduction}\label{chap:introduction}
+
+\section{Contexte et objectif}
+L'atelier~2 a produit « Atlas Boutique », une application de commerce électronique construite selon le patron MVC2 :
+des servlets contrôleurs, des vues JSP/JSTL, des services métier et une persistance JPA sur MySQL. L'atelier~3
+demande la même application, mais avec une couche web fondée sur \textbf{JavaServer Faces} \cite{jsf} et sur JPA.
+
+Le sujet impose un objectif simple à énoncer : remplacer le couple \textit{servlet + JSP} par le couple
+\textit{bean + page Facelets}, sans réécrire ce qui n'a aucune raison de changer.
+
+\section{Décision de périmètre}
+Deux lectures du sujet étaient possibles.
+
+\begin{itemize}
+  \item \textbf{Option A} : conserver les entités, les services, l'injection CDI et la sécurité de l'atelier~2, et ne
+        remplacer que la couche de présentation.
+  \item \textbf{Option B} : repartir d'un projet vide et tout réécrire dans le style « JSF pur », y compris l'accès aux
+        données dans les beans.
+\end{itemize}
+
+J'ai retenu l'option~A. Les services de l'atelier~2 sont déjà testés, transactionnels et protégés contre les accès
+concurrents ; les réécrire n'apporterait aucune compétence nouvelle sur JSF et ferait perdre des garanties. La
+séparation en couches de l'atelier~2 a précisément cet intérêt : changer la technologie d'affichage sans toucher
+au métier. Ce choix est aussi une validation de l'architecture précédente, ce qui le rend instructif.
+
+\section{Ce qui change, ce qui reste}
+Le tableau~\ref{tab:changements} résume la répartition.
+
+\begin{table}[htbp]
+\centering
+\caption{Conservé, remplacé, supprimé}\label{tab:changements}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Statut} & \textbf{Éléments}\\
+\midrule
+Conservé tel quel & Entités JPA, exceptions, utilitaires (\code{PasswordHasher}, \code{Money}), services et leurs implémentations JPA, \code{TransactionRunner}, \code{SchemaTool}, \code{persistence.xml}, configuration CDI.\\
+Remplacé & Servlets $\rightarrow$ beans CDI ; pages JSP et \textit{tag files} $\rightarrow$ pages Facelets et composants composites ; \code{Flash} $\rightarrow$ \code{FacesMessage} ; filtres adaptés au cycle de vie JSF.\\
+Supprimé & jQuery, mini-panier en JSON, \code{BaseServlet}, \code{PanierJson}, bibliothèque JSTL.\\
+Nouveau & Beans de gestion, \code{UserSession}, \code{Affichage}, tests statiques des vues (\code{VuesChecks}).\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Taille du projet}
+Le code principal compte 49 classes Java (4\,242 lignes), dont 15 pour la nouvelle couche web. Les tests
+représentent 8 classes (720 lignes). L'interface se compose de 16 fichiers \code{.xhtml} (933 lignes), d'une feuille
+de style et d'un fichier JavaScript (439 lignes en tout).
+
+\section{Plan du rapport}
+Le chapitre~\ref{chap:conception} reprend le modèle et présente l'architecture JSF. Le chapitre~\ref{chap:environnement}
+fixe l'environnement et les versions. Les chapitres~\ref{chap:persistance} et~\ref{chap:services} résument les couches
+conservées. Le c\oe{}ur de l'atelier se trouve aux chapitres~\ref{chap:jsf} (beans, portées, cycle de vie) et~\ref{chap:vues}
+(Facelets). La sécurité (chapitre~\ref{chap:securite}), les tests (chapitre~\ref{chap:tests}) et les incidents
+(chapitre~\ref{chap:incidents}) précèdent la gestion de version, les perspectives et la conclusion.

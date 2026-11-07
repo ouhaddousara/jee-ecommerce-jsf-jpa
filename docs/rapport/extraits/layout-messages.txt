@@ -1,0 +1,4 @@
+<ui:repeat value="#{facesContext.messageList}" var="message">
+  <div class="flash flash-#{message.severity.ordinal == 2 ? 'error' : (message.severity.ordinal == 0 ? 'success' : 'info')}"
+       role="status">#{message.summary}</div>
+</ui:repeat>

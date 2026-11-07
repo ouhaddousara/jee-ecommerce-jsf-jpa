@@ -1,0 +1,22 @@
+    /** Adds {@code quantite} units of a product; increases the line if it already exists. */
+    public LignePanier ajouterProduit(Produit produit, int quantite) {
+        exigerProduit(produit);
+        exigerQuantiteValide(quantite);
+        if (!produit.isActif()) {
+            throw new MetierException("Le produit « " + produit.getNom()
+                    + " » n'est plus disponible à la vente.");
+        }
+        LignePanier ligne = trouverLigne(produit);
+        int quantiteCible = (ligne == null ? 0 : ligne.getQuantite()) + quantite;
+        verifierQuantiteCible(produit, quantiteCible);
+
+        if (ligne == null) {
+            // The price is frozen here; later price changes do not alter the cart line.
+            ligne = new LignePanier(this, produit, quantite, produit.getPrix());
+            lignes.add(ligne);
+        } else {
+            ligne.setQuantite(quantiteCible);
+        }
+        toucher();
+        return ligne;
+    }
