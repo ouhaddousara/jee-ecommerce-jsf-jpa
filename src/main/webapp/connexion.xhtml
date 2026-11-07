@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="Connexion"/>
+  <ui:param name="nav" value="connexion"/>
+
+  <ui:define name="metadata">
+    <f:metadata>
+      <f:viewParam name="requis" value="#{connexionBean.requis}"/>
+      <f:viewAction action="#{connexionBean.init}"/>
+    </f:metadata>
+  </ui:define>
+
+  <ui:define name="contenu">
+    <section class="auth">
+      <div class="auth-carte">
+        <h1>Connexion</h1>
+        <p class="muted">Content de te revoir. Connecte-toi pour retrouver ton panier.</p>
+
+        <h:form>
+          <t:csrf/>
+          <t:champ nom="email" libelle="Adresse e-mail" type="email" valeur="#{connexionBean.email}"
+                   requis="true" autocomplete="username" maxlength="150"/>
+          <t:champ nom="motDePasse" libelle="Mot de passe" type="password" valeur="#{connexionBean.motDePasse}"
+                   requis="true" autocomplete="current-password" maxlength="100"/>
+          <h:commandButton value="Se connecter" action="#{connexionBean.connecter}"
+                           styleClass="btn btn-primary btn-block btn-lg"/>
+        </h:form>
+
+        <p class="auth-pied">Pas encore de compte ?
+          <a href="#{request.contextPath}/inscription.xhtml">Créer un compte</a></p>
+      </div>
+    </section>
+  </ui:define>
+</ui:composition>

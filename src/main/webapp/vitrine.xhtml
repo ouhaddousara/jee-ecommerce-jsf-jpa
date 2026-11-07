@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="Vitrine"/>
+  <ui:param name="nav" value="vitrine"/>
+
+  <ui:define name="metadata">
+    <f:metadata>
+      <f:viewParam name="categorie" value="#{vitrineBean.categorie}"/>
+      <f:viewParam name="q" value="#{vitrineBean.q}"/>
+      <f:viewParam name="page" value="#{vitrineBean.page}"/>
+      <f:viewParam name="deconnecte" value="#{vitrineBean.deconnecte}"/>
+      <f:viewAction action="#{vitrineBean.init}"/>
+    </f:metadata>
+  </ui:define>
+
+  <ui:define name="contenu">
+
+    <ui:fragment rendered="#{empty vitrineBean.vitrine}">
+      <t:vide illustration="boite" titre="La vitrine est fermée pour le moment"
+              texte="Aucune vitrine n'est active. Reviens un peu plus tard."/>
+    </ui:fragment>
+
+    <ui:fragment rendered="#{not empty vitrineBean.vitrine}">
+
+      <section class="hero">
+        <p class="eyebrow">Sélection du moment</p>
+        <h1>#{vitrineBean.vitrine.titre}</h1>
+        <p class="hero-texte">#{vitrineBean.vitrine.description}</p>
+        <!-- A plain GET form: the search is a bookmarkable address (?q=...), not a JSF postback. -->
+        <form class="search" method="get" action="#{request.contextPath}/vitrine.xhtml" role="search">
+          <ui:fragment rendered="#{vitrineBean.categorie != null}">
+            <input type="hidden" name="categorie" value="#{vitrineBean.categorie}"/>
+          </ui:fragment>
+          <label class="sr-only" for="q">Rechercher un produit</label>
+          <t:icone nom="recherche"/>
+          <input id="q" type="search" name="q" value="#{vitrineBean.q}"
+                 placeholder="Rechercher un produit, une référence…" maxlength="60"/>
+          <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+      </section>
+
+      <nav class="chips" aria-label="Catégories">
+        <a class="chip#{vitrineBean.classeTous}" href="#{vitrineBean.urlTous}">Tout voir</a>
+        <ui:repeat value="#{vitrineBean.categories}" var="cat">
+          <a class="chip#{vitrineBean.classeCategorie(cat.id)}" href="#{vitrineBean.urlCategorie(cat.id)}">
+            #{cat.nom} <span class="chip-n">#{cat.nombreProduits}</span>
+          </a>
+        </ui:repeat>
+      </nav>
+
+      <ui:fragment rendered="#{empty vitrineBean.resultat.elements}">
+        <t:vide illustration="recherche" titre="Aucun produit trouvé"
+                texte="Essaie un autre mot-clé ou retire le filtre de catégorie.">
+          <a class="btn btn-primary" href="#{request.contextPath}/vitrine.xhtml">Voir toute la vitrine</a>
+        </t:vide>
+      </ui:fragment>
+
+      <ui:fragment rendered="#{not empty vitrineBean.resultat.elements}">
+        <p class="compteur">
+          #{vitrineBean.resultat.debut} à #{vitrineBean.resultat.fin} sur
+          #{vitrineBean.resultat.total} produit(s)
+        </p>
+
+        <div class="grille">
+          <ui:repeat value="#{vitrineBean.resultat.elements}" var="p">
+            <article class="carte">
+              <a class="carte-visuel" href="#{request.contextPath}/detail.xhtml?id=#{p.id}" tabindex="-1" aria-hidden="true">
+                <t:visuel produit="#{p}"/>
+              </a>
+              <div class="carte-corps">
+                <p class="carte-cat">#{p.categorie.nom}</p>
+                <h2 class="carte-titre">
+                  <a href="#{request.contextPath}/detail.xhtml?id=#{p.id}">#{p.nom}</a>
+                </h2>
+                <div class="carte-ligne">
+                  <span class="prix">#{affichage.prix(p.prix)}</span>
+                  <span class="stock #{affichage.stockClasse(p.stock)}">#{affichage.stockLibelle(p.stock)}</span>
+                </div>
+
+                <!-- Clients add to the cart; visitors are invited to sign in; administrators see nothing. -->
+                <ui:fragment rendered="#{userSession.client}">
+                  <h:form>
+                    <t:csrf/>
+                    <h:commandButton value="#{affichage.libelleAjout(p.stock)}"
+                                     disabled="#{affichage.indisponible(p.stock)}"
+                                     action="#{panierBean.ajouter(p.id, '1', 'vitrine')}"
+                                     styleClass="btn btn-primary btn-block"/>
+                  </h:form>
+                </ui:fragment>
+                <ui:fragment rendered="#{not userSession.connecte}">
+                  <a class="btn btn-ghost btn-block" href="#{request.contextPath}/connexion.xhtml">Se connecter pour acheter</a>
+                </ui:fragment>
+              </div>
+            </article>
+          </ui:repeat>
+        </div>
+
+        <ui:fragment rendered="#{vitrineBean.resultat.totalPages gt 1}">
+          <nav class="pagination" aria-label="Pagination">
+            <ui:fragment rendered="#{vitrineBean.resultat.precedente}">
+              <a href="#{vitrineBean.urlPage(vitrineBean.resultat.page - 1)}" rel="prev">Précédent</a>
+            </ui:fragment>
+            <ui:repeat value="#{vitrineBean.numerosPages}" var="n">
+              <a href="#{vitrineBean.urlPage(n)}" class="#{vitrineBean.classePage(n)}">#{n}</a>
+            </ui:repeat>
+            <ui:fragment rendered="#{vitrineBean.resultat.suivante}">
+              <a href="#{vitrineBean.urlPage(vitrineBean.resultat.page + 1)}" rel="next">Suivant</a>
+            </ui:fragment>
+          </nav>
+        </ui:fragment>
+      </ui:fragment>
+
+    </ui:fragment>
+  </ui:define>
+</ui:composition>

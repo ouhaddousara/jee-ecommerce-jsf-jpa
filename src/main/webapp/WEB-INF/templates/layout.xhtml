@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!--
+  Page layout (sidebar, messages). A page fills the "contenu" insertion point and
+  may fill "metadata" (view parameters and view action). It passes two parameters:
+  titre (page title) and nav (active menu entry).
+-->
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:t="http://xmlns.jcp.org/jsf/composite/components">
+
+<ui:insert name="metadata"/>
+
+<h:head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>#{titre} · Atlas Boutique</title>
+  <link rel="stylesheet" href="#{request.contextPath}/assets/css/app.css"/>
+</h:head>
+
+<h:body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#{request.contextPath}/vitrine.xhtml">
+      <span class="brand-mark"><t:icone nom="vitrine"/></span>
+      <span class="brand-text">Atlas<small>Boutique</small></span>
+    </a>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <a class="nav-link#{nav == 'vitrine' ? ' is-active' : ''}" href="#{request.contextPath}/vitrine.xhtml">
+        <t:icone nom="vitrine"/><span>Vitrine</span>
+      </a>
+      <ui:fragment rendered="#{userSession.client}">
+        <a class="nav-link#{nav == 'panier' ? ' is-active' : ''}" href="#{request.contextPath}/panier.xhtml">
+          <t:icone nom="panier"/><span>Panier</span>
+          <span class="badge#{userSession.nombreArticles == 0 ? ' is-empty' : ''}">#{userSession.nombreArticles}</span>
+        </a>
+      </ui:fragment>
+      <ui:fragment rendered="#{userSession.admin}">
+        <p class="nav-section">Administration</p>
+        <a class="nav-link#{nav == 'produits' ? ' is-active' : ''}" href="#{request.contextPath}/admin/produits.xhtml">
+          <t:icone nom="produits"/><span>Produits</span>
+        </a>
+        <a class="nav-link#{nav == 'categories' ? ' is-active' : ''}" href="#{request.contextPath}/admin/categories.xhtml">
+          <t:icone nom="categories"/><span>Catégories</span>
+        </a>
+      </ui:fragment>
+    </nav>
+
+    <div class="sidebar-foot">
+      <ui:fragment rendered="#{userSession.connecte}">
+        <div class="user">
+          <span class="user-avatar"><t:icone nom="utilisateur"/></span>
+          <span class="user-info">
+            <strong>#{userSession.nomComplet}</strong>
+            <small>#{userSession.roleLibelle}</small>
+          </span>
+        </div>
+        <h:form>
+          <t:csrf/>
+          <h:commandButton value="Se déconnecter" action="#{userSession.deconnecter}"
+                           styleClass="btn btn-side btn-block"/>
+        </h:form>
+      </ui:fragment>
+      <ui:fragment rendered="#{not userSession.connecte}">
+        <a class="btn btn-accent btn-block" href="#{request.contextPath}/connexion.xhtml">Se connecter</a>
+        <a class="btn btn-side btn-block" href="#{request.contextPath}/inscription.xhtml">Créer un compte</a>
+      </ui:fragment>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="icon-btn js-menu" aria-label="Ouvrir le menu" aria-controls="sidebar">
+        <t:icone nom="menu"/>
+      </button>
+      <a class="topbar-brand" href="#{request.contextPath}/vitrine.xhtml">Atlas Boutique</a>
+      <ui:fragment rendered="#{userSession.client}">
+        <a class="icon-btn topbar-cart" href="#{request.contextPath}/panier.xhtml" aria-label="Panier">
+          <t:icone nom="panier"/>
+          <span class="badge#{userSession.nombreArticles == 0 ? ' is-empty' : ''}">#{userSession.nombreArticles}</span>
+        </a>
+      </ui:fragment>
+    </header>
+
+    <main class="content" id="contenu">
+      <!-- Global messages: INFO = success (green), WARN = info, ERROR = error (red). -->
+      <ui:repeat value="#{facesContext.messageList}" var="message">
+        <div class="flash flash-#{message.severity.ordinal == 2 ? 'error' : (message.severity.ordinal == 0 ? 'success' : 'info')}"
+             role="status">#{message.summary}</div>
+      </ui:repeat>
+      <ui:insert name="contenu"/>
+    </main>
+
+    <footer class="footer">
+      <span>Atelier JEE 3 · JSF et JPA · FST Tanger</span>
+    </footer>
+  </div>
+</div>
+<div class="scrim js-menu-close"></div>
+
+<script src="#{request.contextPath}/assets/js/app.js"></script>
+</h:body>
+</html>

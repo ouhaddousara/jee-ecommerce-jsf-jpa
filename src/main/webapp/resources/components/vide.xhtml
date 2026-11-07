@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- Empty state with an inline illustration; the children hold the call to action. -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://xmlns.jcp.org/jsf/composite"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<cc:interface>
+  <cc:attribute name="illustration" default="panier" shortDescription="panier, recherche or boite"/>
+  <cc:attribute name="titre" required="true"/>
+  <cc:attribute name="texte"/>
+</cc:interface>
+<cc:implementation>
+  <div class="vide">
+    <svg class="vide-img" viewBox="0 0 160 120" aria-hidden="true" focusable="false">
+      <ui:fragment rendered="#{cc.attrs.illustration == 'recherche'}">
+        <ellipse cx="80" cy="108" rx="44" ry="5" fill="#e3f1ef"/>
+        <circle cx="72" cy="54" r="30" fill="#fff" stroke="#0f6e66" stroke-width="3"/>
+        <path d="M94 76l24 24" stroke="#0f6e66" stroke-width="7" stroke-linecap="round"/>
+        <path d="M56 54h32" stroke="#cfe3df" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="122" cy="26" r="8" fill="#e9a820"/>
+      </ui:fragment>
+      <ui:fragment rendered="#{cc.attrs.illustration == 'boite'}">
+        <ellipse cx="80" cy="110" rx="48" ry="5" fill="#e3f1ef"/>
+        <path d="M30 46l50-22 50 22v44l-50 22-50-22z" fill="#fff" stroke="#0f6e66" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M30 46l50 22 50-22M80 68v44" fill="none" stroke="#0f6e66" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="126" cy="22" r="8" fill="#e9a820"/>
+      </ui:fragment>
+      <ui:fragment rendered="#{cc.attrs.illustration != 'recherche' and cc.attrs.illustration != 'boite'}">
+        <ellipse cx="80" cy="106" rx="46" ry="5" fill="#e3f1ef"/>
+        <path d="M34 44h92l-10 48a8 8 0 0 1-8 6H52a8 8 0 0 1-8-6z" fill="#fff" stroke="#0f6e66" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M56 44a24 24 0 0 1 48 0" fill="none" stroke="#0f6e66" stroke-width="3" stroke-linecap="round"/>
+        <path d="M60 62v22M80 62v22M100 62v22" stroke="#cfe3df" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="122" cy="28" r="9" fill="#e9a820"/>
+      </ui:fragment>
+    </svg>
+    <h2>#{cc.attrs.titre}</h2>
+    <ui:fragment rendered="#{not empty cc.attrs.texte}"><p class="muted">#{cc.attrs.texte}</p></ui:fragment>
+    <div class="vide-actions"><cc:insertChildren/></div>
+  </div>
+</cc:implementation>
+</html>

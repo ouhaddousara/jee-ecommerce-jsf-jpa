@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- Error page: web.xml sends every 403, 404, 405, 500 and uncaught exception here.
+     The wording depends on the status code and lives in Affichage (Java), not in the page. -->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="Erreur"/>
+  <ui:param name="nav" value=""/>
+
+  <ui:define name="contenu">
+    <t:vide illustration="recherche"
+            titre="#{affichage.titreErreur(requestScope['javax.servlet.error.status_code'])}"
+            texte="#{affichage.texteErreur(requestScope['javax.servlet.error.status_code'], requestScope['javax.servlet.error.message'])}">
+      <a class="btn btn-primary" href="#{request.contextPath}/vitrine.xhtml">Retour à la vitrine</a>
+    </t:vide>
+    <p class="code-erreur">Code #{affichage.codeErreur(requestScope['javax.servlet.error.status_code'])}</p>
+  </ui:define>
+</ui:composition>

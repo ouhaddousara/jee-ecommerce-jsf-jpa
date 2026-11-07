@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="Catégories"/>
+  <ui:param name="nav" value="categories"/>
+
+  <ui:define name="contenu">
+
+    <div class="entete">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1 class="titre-page">Catégories</h1>
+      </div>
+      <a class="btn btn-primary" href="#{request.contextPath}/admin/categorie-form.xhtml"><t:icone nom="plus"/> Nouvelle catégorie</a>
+    </div>
+
+    <ui:fragment rendered="#{empty categorieAdminBean.categories}">
+      <t:vide illustration="boite" titre="Aucune catégorie" texte="Crée une première catégorie pour ranger les produits.">
+        <a class="btn btn-primary" href="#{request.contextPath}/admin/categorie-form.xhtml">Créer une catégorie</a>
+      </t:vide>
+    </ui:fragment>
+
+    <ui:fragment rendered="#{not empty categorieAdminBean.categories}">
+      <div class="tableau-cadre">
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th scope="col">Catégorie</th>
+              <th scope="col">Description</th>
+              <th scope="col" class="num">Produits</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <ui:repeat value="#{categorieAdminBean.categories}" var="cat">
+              <tr>
+                <td><strong>#{cat.nom}</strong></td>
+                <td class="muted">#{cat.description}</td>
+                <td class="num">#{cat.nombreProduits}</td>
+                <td>
+                  <div class="actions">
+                    <a class="btn btn-ghost btn-sm" href="#{request.contextPath}/admin/categorie-form.xhtml?id=#{cat.id}">Modifier</a>
+                    <h:form>
+                      <t:csrf/>
+                      <h:commandButton value="Supprimer" action="#{categorieAdminBean.supprimer(cat.id)}"
+                                       styleClass="btn btn-danger btn-sm"
+                                       pt:data-confirm="Supprimer cette catégorie ?"/>
+                    </h:form>
+                  </div>
+                </td>
+              </tr>
+            </ui:repeat>
+          </tbody>
+        </table>
+      </div>
+    </ui:fragment>
+
+  </ui:define>
+</ui:composition>

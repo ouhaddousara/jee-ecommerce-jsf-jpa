@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="Mon panier"/>
+  <ui:param name="nav" value="panier"/>
+
+  <ui:define name="contenu">
+
+    <h1 class="titre-page">Mon panier</h1>
+
+    <ui:fragment rendered="#{panierBean.panier.vide}">
+      <t:vide illustration="panier" titre="Ton panier est vide"
+              texte="Parcours la vitrine et ajoute les produits qui te plaisent.">
+        <a class="btn btn-primary" href="#{request.contextPath}/vitrine.xhtml">Découvrir la vitrine</a>
+      </t:vide>
+    </ui:fragment>
+
+    <ui:fragment rendered="#{not panierBean.panier.vide}">
+      <div class="panier-grille">
+
+        <section class="panier-lignes" aria-label="Articles du panier">
+          <ui:repeat value="#{panierBean.panier.lignes}" var="l">
+            <article class="ligne">
+              <a href="#{request.contextPath}/detail.xhtml?id=#{l.produit.id}" tabindex="-1" aria-hidden="true">
+                <t:visuel produit="#{l.produit}" taille="sm"/>
+              </a>
+
+              <div class="ligne-info">
+                <h2><a href="#{request.contextPath}/detail.xhtml?id=#{l.produit.id}">#{l.produit.nom}</a></h2>
+                <p class="muted">Réf. #{l.produit.reference} · #{affichage.prix(l.prixUnitaire)} l'unité</p>
+                <ui:fragment rendered="#{l.quantite ge l.produit.stock}">
+                  <p class="note-stock">Stock maximum atteint (#{l.produit.stock}).</p>
+                </ui:fragment>
+              </div>
+
+              <h:form styleClass="ligne-qte">
+                <t:csrf/>
+                <h:inputText id="quantite" value="#{panierBean.quantites[l.produit.id]}"
+                             pt:type="number" pt:min="1"
+                             pt:max="#{l.produit.stock lt 99 ? l.produit.stock : 99}"
+                             pt:aria-label="Quantité de #{l.produit.nom}"/>
+                <h:commandButton value="Mettre à jour" action="#{panierBean.modifier(l.produit.id)}"
+                                 styleClass="btn btn-ghost btn-sm"/>
+              </h:form>
+
+              <p class="ligne-total">#{affichage.prix(l.sousTotal)}</p>
+
+              <h:form styleClass="ligne-suppr">
+                <t:csrf/>
+                <h:commandButton value="Retirer" action="#{panierBean.retirer(l.produit.id)}"
+                                 styleClass="btn btn-danger btn-sm"/>
+              </h:form>
+            </article>
+          </ui:repeat>
+        </section>
+
+        <aside class="recap" aria-label="Récapitulatif">
+          <h2>Récapitulatif</h2>
+          <dl>
+            <div><dt>Articles</dt><dd>#{panierBean.panier.nombreArticles}</dd></div>
+            <div class="recap-total"><dt>Total</dt><dd>#{affichage.prix(panierBean.panier.total)}</dd></div>
+          </dl>
+          <a class="btn btn-primary btn-block" href="#{request.contextPath}/vitrine.xhtml">Continuer mes achats</a>
+          <h:form>
+            <t:csrf/>
+            <h:commandButton value="Vider le panier" action="#{panierBean.vider}"
+                             styleClass="btn btn-danger btn-block"
+                             pt:data-confirm="Vider entièrement le panier ?"/>
+          </h:form>
+        </aside>
+
+      </div>
+    </ui:fragment>
+
+  </ui:define>
+</ui:composition>

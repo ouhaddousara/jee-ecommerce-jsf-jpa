@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="#{detailBean.produit.nom}"/>
+  <ui:param name="nav" value="vitrine"/>
+
+  <ui:define name="metadata">
+    <f:metadata>
+      <f:viewParam name="id" value="#{detailBean.id}"/>
+      <f:viewAction action="#{detailBean.init}"/>
+    </f:metadata>
+  </ui:define>
+
+  <ui:define name="contenu">
+
+    <nav class="fil" aria-label="Fil d'Ariane">
+      <a href="#{request.contextPath}/vitrine.xhtml">Vitrine</a>
+      <span aria-hidden="true">/</span>
+      <a href="#{request.contextPath}/vitrine.xhtml?categorie=#{detailBean.produit.categorie.id}">#{detailBean.produit.categorie.nom}</a>
+    </nav>
+
+    <article class="detail">
+      <div class="detail-visuel">
+        <t:visuel produit="#{detailBean.produit}" taille="lg"/>
+      </div>
+
+      <div class="detail-corps">
+        <p class="carte-cat">#{detailBean.produit.categorie.nom} · Réf. #{detailBean.produit.reference}</p>
+        <h1>#{detailBean.produit.nom}</h1>
+        <p class="detail-prix">#{affichage.prix(detailBean.produit.prix)}</p>
+        <p><span class="stock #{affichage.stockClasse(detailBean.produit.stock)}">#{affichage.stockLibelle(detailBean.produit.stock)}</span></p>
+
+        <ui:fragment rendered="#{not empty detailBean.produit.description}">
+          <p class="detail-texte">#{detailBean.produit.description}</p>
+        </ui:fragment>
+
+        <ui:fragment rendered="#{detailBean.produit.stock le 0}">
+          <p class="alerte">Ce produit est épuisé pour le moment.</p>
+        </ui:fragment>
+
+        <ui:fragment rendered="#{detailBean.produit.stock gt 0 and userSession.client}">
+          <h:form styleClass="detail-form">
+            <t:csrf/>
+            <div class="champ champ-court">
+              <h:outputLabel for="quantite" value="Quantité"/>
+              <h:inputText id="quantite" value="#{detailBean.quantite}"
+                           pt:type="number" pt:min="1" pt:max="#{detailBean.quantiteMax}"/>
+            </div>
+            <h:commandButton value="Ajouter au panier"
+                             action="#{panierBean.ajouter(detailBean.produit.id, detailBean.quantite, 'detail')}"
+                             styleClass="btn btn-primary btn-lg"/>
+          </h:form>
+        </ui:fragment>
+
+        <ui:fragment rendered="#{detailBean.produit.stock gt 0 and not userSession.connecte}">
+          <p><a class="btn btn-primary btn-lg" href="#{request.contextPath}/connexion.xhtml">Se connecter pour acheter</a></p>
+        </ui:fragment>
+
+        <p><a class="lien-retour" href="#{request.contextPath}/vitrine.xhtml"><t:icone nom="retour"/> Retour à la vitrine</a></p>
+      </div>
+    </article>
+
+  </ui:define>
+</ui:composition>

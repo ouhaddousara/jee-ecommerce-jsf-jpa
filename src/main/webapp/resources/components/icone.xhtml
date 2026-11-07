@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- Inline SVG icon (no external dependency). The path comes from #{affichage.icone(...)}. -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://xmlns.jcp.org/jsf/composite">
+<cc:interface>
+  <cc:attribute name="nom" required="true"/>
+</cc:interface>
+<cc:implementation>
+  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="#{affichage.icone(cc.attrs.nom)}"/></svg>
+</cc:implementation>
+</html>

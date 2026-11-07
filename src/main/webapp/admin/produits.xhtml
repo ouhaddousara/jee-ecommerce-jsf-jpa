@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+                xmlns:t="http://xmlns.jcp.org/jsf/composite/components"
+                template="/WEB-INF/templates/layout.xhtml">
+
+  <ui:param name="titre" value="Produits"/>
+  <ui:param name="nav" value="produits"/>
+
+  <ui:define name="contenu">
+
+    <div class="entete">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1 class="titre-page">Produits</h1>
+      </div>
+      <a class="btn btn-primary" href="#{request.contextPath}/admin/produit-form.xhtml"><t:icone nom="plus"/> Nouveau produit</a>
+    </div>
+
+    <ui:fragment rendered="#{empty produitAdminBean.produits}">
+      <t:vide illustration="boite" titre="Aucun produit" texte="Le catalogue est vide.">
+        <a class="btn btn-primary" href="#{request.contextPath}/admin/produit-form.xhtml">Ajouter le premier produit</a>
+      </t:vide>
+    </ui:fragment>
+
+    <ui:fragment rendered="#{not empty produitAdminBean.produits}">
+      <div class="tableau-cadre">
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th scope="col">Produit</th>
+              <th scope="col">Catégorie</th>
+              <th scope="col" class="num">Prix</th>
+              <th scope="col" class="num">Stock</th>
+              <th scope="col">État</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <ui:repeat value="#{produitAdminBean.produits}" var="p">
+              <tr>
+                <td>
+                  <div class="cellule-produit">
+                    <t:visuel produit="#{p}" taille="sm"/>
+                    <div>
+                      <strong>#{p.nom}</strong>
+                      <span class="muted">#{p.reference}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>#{p.categorie.nom}</td>
+                <td class="num">#{affichage.prix(p.prix)}</td>
+                <td class="num">#{p.stock}</td>
+                <td>
+                  <span class="pill #{p.actif ? 'pill-ok' : 'pill-off'}">#{p.actif ? 'En vente' : 'Retiré'}</span>
+                </td>
+                <td>
+                  <div class="actions">
+                    <a class="btn btn-ghost btn-sm" href="#{request.contextPath}/admin/produit-form.xhtml?id=#{p.id}">Modifier</a>
+                    <h:form>
+                      <t:csrf/>
+                      <h:commandButton value="#{p.actif ? 'Retirer' : 'Remettre'}"
+                                       action="#{produitAdminBean.basculer(p.id)}"
+                                       styleClass="btn btn-ghost btn-sm"/>
+                    </h:form>
+                    <h:form>
+                      <t:csrf/>
+                      <h:commandButton value="Supprimer" action="#{produitAdminBean.supprimer(p.id)}"
+                                       styleClass="btn btn-danger btn-sm"
+                                       pt:data-confirm="Supprimer définitivement ce produit ?"/>
+                    </h:form>
+                  </div>
+                </td>
+              </tr>
+            </ui:repeat>
+          </tbody>
+        </table>
+      </div>
+    </ui:fragment>
+
+  </ui:define>
+</ui:composition>
