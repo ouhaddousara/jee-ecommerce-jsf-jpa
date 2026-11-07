@@ -1,0 +1,33 @@
+# Maven / Eclipse generated files
+target/
+.settings/
+.classpath
+.project
+.factorypath
+bin/
+**/MANIFEST.MF
+
+# Local secrets (only the .example template is versioned)
+src/main/resources/db.properties
+
+# IDE / OS noise
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# LaTeX build artifacts (the final PDF and sources go in report/)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# LaTeX build artifacts (latexmk)
+*.fls
+*.fdb_latexmk
+*.lof
+*.lot
+*.bbl
+*.blg
+docs/rapport/main.pdf

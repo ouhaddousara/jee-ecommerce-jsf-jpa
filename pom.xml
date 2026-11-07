@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ma.fstt</groupId>
+  <artifactId>ecommerce-jsf-jpa</artifactId>
+  <version>1.0.0</version>
+  <packaging>war</packaging>
+  <name>ecommerce-jsf-jpa</name>
+  <description>JEE workshop 3 - e-commerce web application (JSF 2.2 Mojarra + JPA/EclipseLink)</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!--
+      The JDK and Tomcat run on Java 17, but the classes are compiled for Java 11.
+      EclipseLink 2.7.5 reads entity classes with an ASM version that rejects
+      class files newer than Java 13 ("Unsupported class file major version 61"),
+      so it would find no entity at all. Classes built for Java 11 run fine on 17.
+    -->
+    <maven.compiler.release>11</maven.compiler.release>
+    <failOnMissingWebXml>false</failOnMissingWebXml>
+    <mojarra.version>2.2.20</mojarra.version>
+  </properties>
+
+  <dependencies>
+    <!-- Servlet API: provided by Tomcat 9 (javax.* namespace). The assignment's 4.0.0 is
+         replaced by 4.0.1 and the scope is "provided", otherwise it ends up inside the WAR. -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>4.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- javax.annotation (@PostConstruct, @PreDestroy): removed from the JDK after Java 8.
+         Tomcat provides it at runtime; this declaration is only for compilation. -->
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+      <version>1.3.2</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!--
+      JSF 2.2 (Mojarra). Tomcat does not ship JSF, so both artifacts are packaged in the WAR.
+      Same version for api and impl. Facelets does not need the JSP API nor JSTL
+      (the c: and fn: tags are implemented inside Mojarra), so they are no longer declared.
+    -->
+    <dependency>
+      <groupId>com.sun.faces</groupId>
+      <artifactId>jsf-api</artifactId>
+      <version>${mojarra.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.faces</groupId>
+      <artifactId>jsf-impl</artifactId>
+      <version>${mojarra.version}</version>
+    </dependency>
+
+    <!--
+      JAXB API. Mojarra 2.2.x encrypts the "flash" cookie (it carries the message kept across a
+      redirect, e.g. "Bienvenue" after sign-in) with javax.xml.bind.DatatypeConverter, a class
+      removed from the JDK in Java 11. Tomcat runs on Java 17 here, so without this dependency
+      every redirect that keeps a message fails with ClassNotFoundException (HTTP 500).
+    -->
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+
+    <!-- MySQL driver (compatible with MySQL 8); replaces the assignment's 8.0.12 -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>8.0.33</version>
+    </dependency>
+
+    <!--
+      JPA implementation. EclipseLink 2.7.5 brings the javax.persistence 2.2 API
+      transitively, so the separate org.eclipse.persistence:javax.persistence:2.0.0
+      artifact from the assignment is NOT declared (two different JPA API versions
+      on the same classpath would conflict).
+    -->
+    <dependency>
+      <groupId>org.eclipse.persistence</groupId>
+      <artifactId>eclipselink</artifactId>
+      <version>2.7.5</version>
+    </dependency>
+
+    <!-- CDI on Tomcat: managed beans of the JSF layer are CDI beans (@Named) -->
+    <dependency>
+      <groupId>org.jboss.weld.servlet</groupId>
+      <artifactId>weld-servlet-shaded</artifactId>
+      <version>3.1.9.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.enterprise</groupId>
+      <artifactId>jakarta.enterprise.cdi-api</artifactId>
+      <version>2.0.2</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>ecommerce-jsf-jpa</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.4.0</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

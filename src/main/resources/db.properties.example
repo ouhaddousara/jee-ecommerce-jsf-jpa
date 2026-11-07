@@ -1,0 +1,16 @@
+# Copy this file to db.properties (same folder) and fill in your password.
+# db.properties is ignored by Git; only this template is versioned.
+
+# connectionTimeZone=LOCAL keeps LocalDateTime values as written, with no hour shift.
+# sslMode=DISABLED and allowPublicKeyRetrieval are for a MySQL on localhost only.
+db.url=jdbc:mysql://localhost:3306/ecommerce_jsf?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=LOCAL&sslMode=DISABLED&allowPublicKeyRetrieval=true
+db.user=root
+db.password=
+
+# Schema generation at startup:
+# none | create-tables | create-or-extend-tables | drop-and-create-tables
+# (a full reset is done on purpose with SchemaTool, so keep create-or-extend-tables here)
+jpa.ddl=none
+
+# OFF | SEVERE | WARNING | INFO | CONFIG | FINE   (FINE prints every SQL statement)
+jpa.log=INFO
