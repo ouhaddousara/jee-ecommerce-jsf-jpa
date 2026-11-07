@@ -98,6 +98,15 @@ Sans serveur ni framework de test : dans Eclipse, *Run As > Java Application* su
 pas de composant produisant du script en ligne, jeton CSRF dans chaque formulaire, références EL vers des beans et
 des membres existants). Résultat attendu : `TOUT EST CONFORME`.
 
+## Rapport
+
+Le rapport de l'atelier (conception, décisions JSF/CDI/JPA, sécurité, tests, incidents rencontrés et captures) est dans le dépôt :
+
+- PDF : [`docs/rapport/rapport_atelier_jee3.pdf`](docs/rapport/rapport_atelier_jee3.pdf)
+- Sources LaTeX : [`docs/rapport/`](docs/rapport/) (`main.tex` et un fichier par chapitre dans `chapitres/`)
+
+Pour le recompiler : `latexmk -pdf main.tex` depuis `docs/rapport/` (paquets `texlive-lang-french` et `texlive-latex-extra` nécessaires).
+
 ## Limites connues
 
 - Pas de HTTPS, donc pas d'attribut `Secure` sur le cookie de session.
